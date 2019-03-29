@@ -10,8 +10,8 @@ $(function () {
 
         },
         "JOB": {
-            "en_us": "FullStack Developer",
-            "pt_br": "Desenvolvedor FullStack"
+            "en_us": "Applied Computing",
+            "pt_br": "Computação Aplicada"
         },
         "BTN_CONTACT": {
             "en_us": "Contact Me",
@@ -22,16 +22,16 @@ $(function () {
             "pt_br": "Útimos Projetos"
         },
         "VALUE_LOCATION": {
-            "en_us": "Boa Vista/Roraima, Brazil",
-            "pt_br": "Boa Vista/Roraima, Brasil"
+            "en_us": "Sao Jose dos Campos/SP, Brazil",
+            "pt_br": "São José dos Campos/SP, Brasil"
         },
         "LABEL_SKILLS": {
             "en_us": "Skills",
             "pt_br": "Habilidades"
         },
         "VALUE_SKILLS": {
-            "en_us": "Experiência em desenvolvimento mobile e web. Estudante aventureiro nas áreas de Inteligência Artificial, Segurança da Informação e Análise da Complexidade e Otimização de Algoritmos.",
-            "pt_br": "Experiência em desenvolvimento mobile e web. Estudante aventureiro nas áreas de Inteligência Artificial, Segurança da Informação e Análise da Complexidade e Otimização de Algoritmos."
+            "en_us": "Experiência em Redes de Computadores, Instrumentação Meteorológica, Segurança da Informação, Redes de sensores Sem Fio, Monitoramento Ambiental.",
+            "pt_br": "Experiência em Redes de Computadores, Instrumentação Meteorológica, Segurança da Informação, Redes de sensores Sem Fio, Monitoramento Ambiental."
         },
         "": {
             "en_us": "",
