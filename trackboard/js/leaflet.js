@@ -15,7 +15,7 @@ var options = {
   },
 };
 
-var data = fetch('https://github.com/helvecioneto/helvecioneto.github.io/blob/main/trackboard/data/track/boundary.geojson')
+var data = fetch('https://raw.githubusercontent.com/helvecioneto/helvecioneto.github.io/main/trackboard/data/track/boundary.geojson')
   .then(response => response.json())
   .then(data => {
     var vtLayer = L.geoJson.vt(data, options).addTo(map);
