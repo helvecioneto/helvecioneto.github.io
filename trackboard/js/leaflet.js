@@ -10,8 +10,9 @@ var options = {
   tolerance: 3,
   debug: 0,
   style: {
-    fillColor: "#1EB300",
-    color: "#F2FF00",
+    fillColor: "transparent",
+    color: "#FF0000",
+    weight: 1,
   },
 };
 
