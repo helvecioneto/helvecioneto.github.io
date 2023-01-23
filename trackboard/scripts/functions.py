@@ -3,6 +3,7 @@ import glob
 import pathlib
 import pandas as pd
 import geopandas as gpd
+import numpy as np
 import re
 from pytimeparse.timeparse import timeparse
 pyfortrack_dir = '/home/helvecioneto/pyfortrack/'
@@ -17,13 +18,13 @@ def get_latest_timestamp(path):
     timestamp = pd.to_datetime(max_timestamp, format='%Y%m%d_%H%M00', errors='coerce', utc=True)
     return timestamp
 
-def get_geotrack_paths(path, timestamp):
+def get_geotrack_paths(timestamp, path):
     boundary_path = path + timestamp.strftime('geometry/boundary/%Y%m%d_%H%M00.geojson')
     vector_field_path = path + timestamp.strftime('geometry/vector_field/%Y%m%d_%H%M00.geojson')
     trajectory_path = path + timestamp.strftime('geometry/trajectory/%Y%m%d_%H%M00.geojson')
     return boundary_path, vector_field_path, trajectory_path
 
-def get_geofrcst_paths(path, timestamp, time_delta, time):
+def get_geofrcst_paths(timestamp, time, time_delta, path, ):
     time_delta = pd.to_timedelta(timeparse(time_delta), unit='s')
     delta_path = timestamp + (time_delta * time)
     boundary_path = path + timestamp.strftime('%Y%m%d_%H%M00/geometry/boundary/') + delta_path.strftime('%Y%m%d_%H%M00.geojson')
@@ -52,33 +53,36 @@ def read_geoframe(path):
 
 def read_data(data_name):
     # Import read_data function according to data_name
-    if data_name == "rad_example":
-        read_file = rad_example.read_file
-    elif data_name == "goamazon":
-        read_file = goamazon.read_file
-    elif data_name == "goes13":
-        read_file = goes13.read_file
-    elif data_name == "goes16":
-        read_file = goes16.read_file
-    elif data_name == "jaxa":
-        read_file = jaxa.read_file
-    elif data_name == "gsmap":
-        read_file = jaxa2.read_file
-    elif data_name == "vlfsensor":
-        read_file = vlfsensor.read_file
-    elif data_name == "noaa":
-        read_file = noaa.read_file
-    elif data_name == "mapbiomas":
-        read_file = mapbiomas.read_file
-    elif data_name == "kde_flash":
-        read_file = kde_flash.read_file
-    elif data_name == "glm":
-        read_file = glm.read_file
-    elif data_name == "censipan":
-        read_file = censipan.read_file
-    elif data_name == "goes16mmh":
-        read_file = goes16mmh.read_file
-    else:
-        raise ValueError("data_name not found")
-    return read_file
-
+    try:
+        if data_name == "rad_example":
+            read_file = rad_example.read_file
+        elif data_name == "goamazon":
+            read_file = goamazon.read_file
+        elif data_name == "goes13":
+            read_file = goes13.read_file
+        elif data_name == "goes16":
+            read_file = goes16.read_file
+        elif data_name == "jaxa":
+            read_file = jaxa.read_file
+        elif data_name == "gsmap":
+            read_file = jaxa2.read_file
+        elif data_name == "vlfsensor":
+            read_file = vlfsensor.read_file
+        elif data_name == "noaa":
+            read_file = noaa.read_file
+        elif data_name == "mapbiomas":
+            read_file = mapbiomas.read_file
+        elif data_name == "kde_flash":
+            read_file = kde_flash.read_file
+        elif data_name == "glm":
+            read_file = glm.read_file
+        elif data_name == "censipan":
+            read_file = censipan.read_file
+        elif data_name == "goes16mmh":
+            read_file = goes16mmh.read_file
+        else:
+            raise ValueError("data_name not found")
+        return read_file
+    except:
+        # empty numpy array
+        return lambda x: np.array([])
