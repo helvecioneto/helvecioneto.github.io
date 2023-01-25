@@ -70,8 +70,6 @@ def read_data(data_name):
             read_file = vlfsensor.read_file
         elif data_name == "noaa":
             read_file = noaa.read_file
-        elif data_name == "mapbiomas":
-            read_file = mapbiomas.read_file
         elif data_name == "kde_flash":
             read_file = kde_flash.read_file
         elif data_name == "glm":
