@@ -1,27 +1,23 @@
 const options = {
-    // Required: API key
-    key: 'zqrQkL4kvkdyp30r3R74ntepGSVKfLWU', // REPLACE WITH YOUR KEY !!!
+    // Substitua pela sua chave Windy API
+    key: 'zqrQkL4kvkdyp30r3R74ntepGSVKfLWU',
 
-    // Put additional console output
+    // Informações adicionais para depuração no console
     verbose: true,
-    latlon: true,
 
-    // Optional: Initial state of the map
+    // Estado inicial do mapa
     lat: -15,
     lon: -46,
     zoom: 4.5,
-    overlay: 'satellite',
-
+    overlay: 'satellite'
 };
 
-// Initialize Windy API
+// Inicializa a API Windy
 windyInit(options, windyAPI => {
-    // windyAPI is ready, and contain 'map', 'store',
-    // 'picker' and other usefull stuff
-    // .map is instance of Leaflet map
-    const { map } = windyAPI;
+    const { map, overlays } = windyAPI;
+    
+    // Verifica se o mapa foi carregado corretamente
+    console.log("Mapa Windy inicializado!");
 
-
-
+    // Adiciona algum comportamento adicional, se necessário
 });
-
