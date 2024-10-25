@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>pyFortrack-v1 BETA</title>
 
+    <!-- Folha de Estilo do Leaflet -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
     integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
     crossorigin=""/>
@@ -17,11 +18,96 @@
     <!-- Style -->
     <link href="css/styles.css" rel="stylesheet" type="text/css">
 
+    <style>
+        /* Estilo da Divisão de Mapa */
+        #mapid { height: 100vh; }
+
+        /* Estilo para a Aba Lateral */
+        .sidebar {
+            position: absolute;
+            top: 50%; /* Centraliza verticalmente */
+            right: 10px; /* Lado direito */
+            transform: translateY(-50%); /* Ajusta o deslocamento para centralização */
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            z-index: 1000;
+        }
+
+        /* Estilo para a camada GeoJSON */
+        .geojson-style {
+            fillColor: "rgba(255, 0, 0, 0.5)", /* Cor de preenchimento com opacidade */
+            color: "#FF0000", /* Cor da borda */
+            weight: 2, /* Peso da borda */
+        }
+    </style>
 </head>
 <body>
+    <!-- Mapa -->
     <div id="mapid"></div>
+    
+    <!-- Aba Lateral para Controle de Camadas -->
+    <div class="sidebar">
+        <label>
+            <input type="checkbox" id="toggleLayer" checked>
+            Track Boundary
+        </label>
+    </div>
+
+    <!-- Scripts -->
     <script src="https://unpkg.com/geojson-vt@3.2.0/geojson-vt.js"></script>
     <script src="./js/leaflet-geojson-vt.js"></script>
     <script src="./js/leaflet.js"></script>
+
+    <script>
+        // Centraliza o mapa na localização desejada
+        var map = L.map('mapid').setView([-26, -57], 5);
+
+        // Adiciona o tile layer do OpenStreetMap
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Define as opções de estilo do GeoJSON
+        var geojsonStyle = {
+            fillColor: "rgba(255, 0, 0, 0.5)", // Estilo atualizado
+            color: "#FF0000",
+            weight: 2,
+        };
+
+        // Variável para armazenar a camada GeoJSON
+        var geojsonLayer;
+
+        // Função para carregar a camada GeoJSON
+        fetch('https://raw.githubusercontent.com/helvecioneto/helvecioneto.github.io/refs/heads/main/trackboard/leaflet/data/track/boundary.geojson')
+          .then(response => response.json())
+          .then(data => {
+            geojsonLayer = L.geoJSON(data, {
+              style: geojsonStyle,
+              onEachFeature: function (feature, layer) {
+                // Adiciona um popup a cada polígono
+                if (feature.properties) {
+                    const uid = feature.properties.uid || 'N/A'; // Obtém uid
+                    const timestamp = feature.properties.timestamp || 'N/A'; // Obtém timestamp
+                    layer.bindPopup(`UID: ${uid}<br>Timestamp: ${timestamp}`); // Texto do popup
+                }
+              }
+            }).addTo(map);
+            
+            // Ajusta o zoom para o novo layer
+            map.fitBounds(geojsonLayer.getBounds());
+          })
+          .catch(error => console.error('Erro ao carregar o arquivo GeoJSON:', error));
+
+        // Controle para mostrar/ocultar a camada
+        document.getElementById('toggleLayer').addEventListener('change', function (e) {
+            if (e.target.checked) {
+                map.addLayer(geojsonLayer); // Mostra a camada
+            } else {
+                map.removeLayer(geojsonLayer); // Oculta a camada
+            }
+        });
+    </script>
 </body>
 </html>
