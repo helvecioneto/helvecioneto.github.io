@@ -384,11 +384,12 @@ ul { margin: 0; padding: 0; list-style: none; }
 .hero__affil span { display: block; color: var(--ink-muted); font-size: .87rem; }
 
 /* Profile links */
+/* Último elemento do topo desde que as métricas saíram — o respiro abaixo é o
+   padding da própria seção. */
 .profiles {
   display: flex;
   flex-wrap: wrap;
   gap: .5rem;
-  margin-bottom: 2.2rem;
 }
 .chip {
   display: inline-flex;
@@ -410,37 +411,6 @@ ul { margin: 0; padding: 0; list-style: none; }
   border-color: var(--accent-soft);
   background: var(--accent-wash);
   transform: translateY(-1px);
-}
-
-/* Metrics strip */
-.metrics {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0;
-  border-top: 1px solid var(--rule);
-  padding-top: 1.5rem;
-}
-.metric {
-  padding-right: clamp(1.5rem, 4vw, 3rem);
-  margin-right: clamp(1.5rem, 4vw, 3rem);
-  border-right: 1px solid var(--rule);
-}
-.metric:last-child { border-right: 0; margin-right: 0; padding-right: 0; }
-.metric__num {
-  font-family: var(--serif);
-  font-size: clamp(1.7rem, 3.4vw, 2.2rem);
-  font-weight: 400;
-  line-height: 1;
-  color: var(--accent);
-  letter-spacing: -.02em;
-}
-.metric__label {
-  margin-top: .4rem;
-  font-size: .68rem;
-  font-weight: 600;
-  letter-spacing: .11em;
-  text-transform: uppercase;
-  color: var(--ink-muted);
 }
 
 /* ==========================================================================

@@ -26,10 +26,14 @@ Em <https://helvecioneto.github.io/admin/>. Entre com `helvecio.leal@ufopa.edu.b
 e a senha definida no Supabase. O que sai de lá entra no ar **na hora**: o site lê
 o conteúdo direto do banco, sem precisar de commit nem de novo deploy.
 
-Dá para editar tudo o que é visível: textos e resumos nas duas línguas,
-publicações, linhas e grupos de pesquisa, disciplinas, software, formação e os
-links de perfil do topo. As métricas do topo (publicações, citações, disciplinas,
-estrelas) e as contagens dos filtros são somadas a partir dos registros — não
+O menu do painel segue a mesma ordem das seções da página — Perfil, Pesquisa,
+Publicações, Ensino, Produtos, Formação, Contato — para que editar seja procurar
+pelo mesmo nome que se vê no site. Dentro de cada seção, os textos e as fichas
+daquela parte aparecem juntos, em blocos. Um oitavo item, **Geral**, reúne o que
+não pertence a nenhuma seção: título da aba do navegador, descrição para
+buscadores, nomes do menu e rodapé.
+
+As contagens dos filtros de publicação são somadas a partir dos registros — não
 existem como campo, então nunca ficam dessincronizadas.
 
 Atalhos: `Ctrl/Cmd + S` salva o registro em foco; a busca filtra a seção aberta;
@@ -96,7 +100,7 @@ Pelo painel em `/admin`. As tabelas no Supabase são:
 | `publications` | publicações, com autores, veículo, DOI e citações |
 | `research_areas` / `research_groups` | linhas e grupos de pesquisa |
 | `courses` | disciplinas, com código, carga horária e tópicos |
-| `software` | projetos, estrelas e links |
+| `software` | produtos, estrelas e links |
 | `education` | linha do tempo da formação |
 | `links` | botões de perfil do topo |
 | `admins` | quem pode escrever (invisível para o cliente) |
