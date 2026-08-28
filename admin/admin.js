@@ -146,7 +146,8 @@ const COLLECTIONS = {
     table: 'research_groups', pk: 'id',
     title: 'Grupos de pesquisa',
     intro: 'Grupos aos quais você é vinculado, exibidos logo abaixo das linhas de pesquisa.',
-    titleOf: (r) => r.acronym || r.name_pt || '(sem nome)',
+    titleOf: (r) => r.name_pt || r.acronym || '(sem nome)',
+    metaOf:  (r) => [r.acronym, r.logo_url ? 'com logo' : null].filter(Boolean).join(' · '),
     blank: () => ({ acronym: '', name_pt: '', name_en: '', org_pt: '', org_en: '', logo_url: null, site_url: null }),
     fields: [
       { k: 'logo_url', t: 'image', label: 'Logo do grupo', help: 'PNG, JPG, WebP ou SVG, até 2 MB. Sem logo, a sigla aparece no lugar.' },
@@ -572,7 +573,12 @@ function collectInto(rec, el) {
     if (t === 'bool')      rec[k] = input.checked;
     else if (t === 'list') rec[k] = input.value.split('\n').map((s) => s.trim()).filter(Boolean);
     else if (t === 'num')  rec[k] = input.value === '' ? 0 : Number(input.value);
-    else                   rec[k] = input.value.trim() === '' ? (k === 'doi' || k === 'url' || k === 'docs' || k === 'code' ? null : '') : input.value;
+    else {
+      // Endereço em branco grava NULL, não "". Decidido pelo tipo do campo, e
+      // não por uma lista de nomes, que envelhece a cada campo novo.
+      const v = input.value.trim();
+      rec[k] = (v === '' && (t === 'url' || t === 'image')) ? null : input.value;
+    }
   });
 }
 
