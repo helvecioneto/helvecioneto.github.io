@@ -40,8 +40,42 @@ const T = {
   url:    { label: 'Endereço',     el: 'input', type: 'url', mono: true },
   list:   { label: 'Lista',        el: 'textarea', list: true },
   bool:   { label: 'Sim/não',      el: 'check' },
-  choice: { label: 'Escolha',      el: 'select' }
+  choice: { label: 'Escolha',      el: 'select' },
+  image:  { label: 'Imagem',       el: 'image' }
 };
+
+const STORAGE = SUPABASE_URL + '/storage/v1/object';
+const PUBLIC_MEDIA = STORAGE + '/public/media/';
+
+/* Nome de arquivo previsível e sem acentos: o caminho vira URL pública. */
+function mediaPath(file) {
+  const ext = (file.name.match(/\.[a-z0-9]+$/i) || ['.png'])[0].toLowerCase();
+  const base = file.name.replace(/\.[^.]+$/, '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase().slice(0, 40);
+  return `${base || 'imagem'}-${Date.now().toString(36)}${ext}`;
+}
+
+async function uploadImage(file) {
+  if (file.size > 2 * 1024 * 1024) throw new Error('A imagem passa de 2 MB.');
+  await refreshIfNeeded();
+  const path = mediaPath(file);
+  const res = await fetch(`${STORAGE}/media/${path}`, {
+    method: 'POST',
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: 'Bearer ' + state.session.access_token,
+      'Content-Type': file.type || 'application/octet-stream',
+      'x-upsert': 'true'
+    },
+    body: file
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.message || `Falha no envio (${res.status}).`);
+  }
+  return PUBLIC_MEDIA + path;
+}
 
 const PUB_TYPES = [
   ['journal',    'Artigo em periódico'],
@@ -68,7 +102,13 @@ const COLLECTIONS = {
     title: 'Publicações',
     intro: 'Os filtros por tipo, as contagens e as métricas do topo do site são calculados a partir desta lista. Escreva seu próprio nome exatamente como "Leal Neto, H. B." para que apareça em negrito.',
     titleOf: (r) => r.title || '(sem título)',
-    metaOf:  (r) => `${r.year} · ${(PUB_TYPES.find((p) => p[0] === r.type) || [, r.type])[1]}`,
+    metaOf:  (r) => {
+      const tipo = (PUB_TYPES.find((p) => p[0] === r.type) || [, r.type])[1];
+      // Marca o que entrou pela sincronização semanal, para se distinguir do que
+      // você cadastrou à mão.
+      const auto = r.source === 'openalex' ? ' · importada' : '';
+      return `${r.year} · ${tipo}${auto}`;
+    },
     blank: () => ({ year: new Date().getFullYear(), type: 'journal', title: '', authors: [], venue_pt: '', venue_en: '', doi: null, cites: 0 }),
     fields: [
       { k: 'title', t: 'area', label: 'Título' },
@@ -107,9 +147,13 @@ const COLLECTIONS = {
     title: 'Grupos de pesquisa',
     intro: 'Grupos aos quais você é vinculado, exibidos logo abaixo das linhas de pesquisa.',
     titleOf: (r) => r.acronym || r.name_pt || '(sem nome)',
-    blank: () => ({ acronym: '', name_pt: '', name_en: '', org_pt: '', org_en: '' }),
+    blank: () => ({ acronym: '', name_pt: '', name_en: '', org_pt: '', org_en: '', logo_url: null, site_url: null }),
     fields: [
-      { k: 'acronym', t: 'text', label: 'Sigla', help: 'Aparece em destaque à esquerda. Ex.: SInApSE' },
+      { k: 'logo_url', t: 'image', label: 'Logo do grupo', help: 'PNG, JPG, WebP ou SVG, até 2 MB. Sem logo, a sigla aparece no lugar.' },
+      { pair: [
+        { k: 'acronym',  t: 'text', label: 'Sigla', help: 'Usada quando não há logo. Ex.: SInApSE' },
+        { k: 'site_url', t: 'url',  label: 'Site do grupo', help: 'Opcional. Com ele, o nome do grupo vira link.' }
+      ] },
       { pair: [
         { k: 'name_pt', t: 'area', label: 'Nome do grupo', lang: 'PT' },
         { k: 'name_en', t: 'area', label: 'Group name',    lang: 'EN' }
@@ -244,7 +288,7 @@ const SECTIONS = [
   },
   {
     id: 'publicacoes', nav: 'Publicações',
-    intro: 'Sua produção científica. Os filtros por tipo e as contagens são calculados a partir desta lista.',
+    intro: 'Sua produção científica. Toda segunda-feira uma rotina busca trabalhos novos e atualiza as citações; o que ela traz vem marcado como "importada". Suas edições de título, veículo e autores nunca são sobrescritas.',
     blocks: [
       { kind: 'rec',  label: 'Publicações', col: 'publications' },
       { kind: 'text', label: 'Cabeçalho e rótulos dos filtros', from: ['Publicações'] }
@@ -395,6 +439,29 @@ function fieldHTML(f, rec) {
   const spec = T[f.t];
   const flag = f.lang ? `<span class="flag${f.lang === 'EN' ? ' flag--en' : ''}">${f.lang}</span>` : '';
   const help = f.help ? `<span class="help">${esc(f.help)}</span>` : '';
+
+  if (spec.el === 'image') {
+    const prev = raw
+      ? `<img src="${esc(raw)}" alt="">`
+      : '<span>sem<br>imagem</span>';
+    return `<div class="fld fld--img">
+      <label for="${id}">${esc(f.label)} ${flag}</label>
+      <div class="img-row">
+        <div class="img-prev" data-prev="${f.k}">${prev}</div>
+        <div class="img-side">
+          <input id="${id}" data-k="${f.k}" data-t="${f.t}" type="url"
+                 placeholder="Envie um arquivo ou cole um endereço" value="${esc(val)}">
+          <div class="img-btns">
+            <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif"
+                   id="up-${id}" data-upload="${f.k}" hidden>
+            <button class="btn btn--sm btn--quiet" type="button" data-pick="up-${id}">Enviar imagem</button>
+            <button class="btn btn--sm btn--quiet" type="button" data-clear="${f.k}"${raw ? '' : ' disabled'}>Remover</button>
+          </div>
+          ${help}
+        </div>
+      </div>
+    </div>`;
+  }
 
   if (spec.el === 'check') {
     return `<div class="check">
@@ -617,6 +684,20 @@ function wireApp() {
       return;
     }
 
+    const pick = ev.target.closest('[data-pick]');
+    if (pick) { document.getElementById(pick.dataset.pick)?.click(); return; }
+
+    const clear = ev.target.closest('[data-clear]');
+    if (clear) {
+      const card = clear.closest('.rec');
+      const input = card.querySelector(`[data-k="${clear.dataset.clear}"]`);
+      input.value = '';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      card.querySelector(`[data-prev="${clear.dataset.clear}"]`).innerHTML = '<span>sem<br>imagem</span>';
+      clear.disabled = true;
+      return;
+    }
+
     const btn = ev.target.closest('[data-act]');
     if (!btn) return;
     const card = btn.closest('.rec');
@@ -668,6 +749,40 @@ function wireApp() {
         render();
       } catch (err) { toast(err.message, 'err'); }
     }
+  });
+
+  $('#records').addEventListener('change', async (ev) => {
+    const input = ev.target.closest('[data-upload]');
+    if (!input || !input.files?.length) return;
+    const card = input.closest('.rec');
+    const key = input.dataset.upload;
+    const target = card.querySelector(`[data-k="${key}"]`);
+    const prev = card.querySelector(`[data-prev="${key}"]`);
+    const before = prev.innerHTML;
+    prev.innerHTML = '<span class="spinner spinner--dark"></span>';
+    try {
+      const url = await uploadImage(input.files[0]);
+      target.value = url;
+      target.dispatchEvent(new Event('input', { bubbles: true }));
+      prev.innerHTML = `<img src="${esc(url)}" alt="">`;
+      card.querySelector(`[data-clear="${key}"]`).disabled = false;
+      toast('Imagem enviada. Salve o registro para publicá-la.');
+    } catch (err) {
+      prev.innerHTML = before;
+      toast(err.message, 'err');
+    } finally {
+      input.value = '';
+    }
+  });
+
+  // Colar um endereço à mão também atualiza a miniatura.
+  $('#records').addEventListener('input', (ev) => {
+    if (ev.target.dataset?.t !== 'image') return;
+    const card = ev.target.closest('.rec');
+    const prev = card.querySelector(`[data-prev="${ev.target.dataset.k}"]`);
+    const v = ev.target.value.trim();
+    prev.innerHTML = v ? `<img src="${esc(v)}" alt="">` : '<span>sem<br>imagem</span>';
+    card.querySelector(`[data-clear="${ev.target.dataset.k}"]`).disabled = !v;
   });
 
   // Marca o registro como não salvo assim que algo muda.

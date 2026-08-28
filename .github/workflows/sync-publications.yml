@@ -1,0 +1,60 @@
+name: Sincronizar publicações
+
+# Só agendado ou disparado à mão. Sem gatilho de pull_request: um fork não pode
+# abrir um PR que rode este job e alcance o segredo.
+on:
+  schedule:
+    - cron: '0 6 * * 1'      # toda segunda-feira, 06:00 UTC (03:00 em Santarém)
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Simular, sem gravar nada'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-publications
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Buscar publicações novas e citações
+        env:
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SERPAPI_KEY: ${{ secrets.SERPAPI_KEY }}
+          OPENALEX_MAILTO: ${{ secrets.OPENALEX_MAILTO }}
+        run: |
+          node scripts/sync-publications.js ${{ inputs.dry_run && '--dry-run' || '' }}
+
+      # A cópia de reserva é o que o site mostra se o Supabase estiver fora do ar
+      # ou pausado. Sem este passo ela envelheceria sozinha.
+      - name: Atualizar a cópia de reserva
+        if: ${{ !inputs.dry_run }}
+        run: node scripts/sync-fallback.js
+
+      - name: Publicar se algo mudou
+        if: ${{ !inputs.dry_run }}
+        run: |
+          if git diff --quiet -- assets/js/content.js; then
+            echo "Nada mudou na cópia de reserva."
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add assets/js/content.js
+          git commit -m "Atualiza a cópia de reserva do conteúdo
+
+          Gerado por scripts/sync-fallback.js após a sincronização semanal
+          de publicações e citações."
+          git push

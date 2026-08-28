@@ -53,7 +53,7 @@ function applyRemote(data) {
     const key = `group.remote${i}`;
     I18N.pt[key + '.n'] = g.name_pt; I18N.en[key + '.n'] = g.name_en;
     I18N.pt[key + '.d'] = g.org_pt;  I18N.en[key + '.d'] = g.org_en;
-    return { acronym: g.acronym, key };
+    return { acronym: g.acronym, key, logo: g.logo_url || null, site: g.site_url || null };
   }));
 
   // --- publicações ----------------------------------------------------------
