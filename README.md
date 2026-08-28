@@ -9,12 +9,62 @@ Site estático, sem build, servido pelo GitHub Pages em <https://helvecioneto.gi
 ## Estrutura
 
 ```
-index.html               página única, bilíngue (PT-BR / EN)
-assets/css/style.css     identidade visual institucional
-assets/js/content.js     textos traduzidos + dados (publicações, disciplinas, software)
-assets/js/app.js         renderização, troca de idioma, filtros e formulário
-assets/img/              retrato e favicon
+index.html                 página única, bilíngue (PT-BR / EN)
+assets/css/style.css       identidade visual institucional
+assets/js/content.js       CÓPIA DE RESERVA do conteúdo (gerada, não editar à mão)
+assets/js/remote.js        busca o conteúdo vivo no Supabase
+assets/js/app.js           renderização, troca de idioma, filtros e formulário
+assets/img/                retrato e favicon
+admin/                     painel de edição (/admin)
+scripts/sync-fallback.js   regenera a cópia de reserva a partir do banco
+supabase/migrations/       schema e carga inicial
 ```
+
+## Painel de edição
+
+Em <https://helvecioneto.github.io/admin/>. Entre com `helvecio.leal@ufopa.edu.br`
+e a senha definida no Supabase. O que sai de lá entra no ar **na hora**: o site lê
+o conteúdo direto do banco, sem precisar de commit nem de novo deploy.
+
+Dá para editar tudo o que é visível: textos e resumos nas duas línguas,
+publicações, linhas e grupos de pesquisa, disciplinas, software, formação e os
+links de perfil do topo. As métricas do topo (publicações, citações, disciplinas,
+estrelas) e as contagens dos filtros são somadas a partir dos registros — não
+existem como campo, então nunca ficam dessincronizadas.
+
+Atalhos: `Ctrl/Cmd + S` salva o registro em foco; a busca filtra a seção aberta;
+as setas ▲▼ reordenam. Um registro alterado e ainda não salvo fica marcado em
+âmbar, e a página avisa se você tentar sair com pendências.
+
+### Como a segurança funciona
+
+A senha **nunca** é comparada no navegador. Ela é verificada pelo Supabase, e a
+autorização vem do banco: as políticas de *Row Level Security* liberam leitura
+para todo mundo (o site é público) e só aceitam escrita de um e-mail cadastrado
+na tabela `admins`. A chave que aparece no código do cliente é a publicável — com
+ela sozinha, um visitante lê, mas não altera nem apaga nada.
+
+Para trocar a senha, use *Authentication → Users* no painel do Supabase. Para
+autorizar outra pessoa a editar, insira o e-mail dela em `admins` e crie o usuário
+correspondente — nenhuma dessas duas coisas basta sozinha.
+
+### A cópia de reserva
+
+`assets/js/content.js` é um retrato do conteúdo embutido na própria página. Ele é
+renderizado de imediato e depois substituído pelos dados do banco. Se o Supabase
+estiver fora do ar, bloqueado por rede corporativa ou **pausado por inatividade**
+— o plano gratuito pausa projetos parados por cerca de uma semana — o site
+continua completo, mostrando esse retrato em vez de quebrar.
+
+Por isso a reserva precisa ser atualizada de vez em quando:
+
+```sh
+node scripts/sync-fallback.js
+git commit -am "Atualiza a cópia de reserva do conteúdo"
+```
+
+Rode isso depois de uma rodada de edições no painel. Sem isso, uma eventual queda
+do banco faria o site exibir conteúdo antigo.
 
 ## Formulário de contato
 
@@ -38,22 +88,22 @@ Proteções já incluídas: validação de todos os campos no cliente, campo-arm
 
 ## Atualizar o conteúdo
 
-Todo o conteúdo editorial fica em `assets/js/content.js`:
+Pelo painel em `/admin`. As tabelas no Supabase são:
 
-| O que mudar | Onde |
+| Tabela | O que guarda |
 |---|---|
-| Textos em português | objeto `I18N.pt` |
-| Textos em inglês | objeto `I18N.en` |
-| Publicações | array `PUBLICATIONS` |
-| Disciplinas | array `COURSES` (títulos e ementas em `I18N`, chaves `c1`–`c5`) |
-| Software | array `SOFTWARE` |
-| Formação | array `EDUCATION` |
+| `site_text` | todo texto da página, com `pt` e `en` lado a lado |
+| `publications` | publicações, com autores, veículo, DOI e citações |
+| `research_areas` / `research_groups` | linhas e grupos de pesquisa |
+| `courses` | disciplinas, com código, carga horária e tópicos |
+| `software` | projetos, estrelas e links |
+| `education` | linha do tempo da formação |
+| `links` | botões de perfil do topo |
+| `admins` | quem pode escrever (invisível para o cliente) |
 
-Para incluir uma publicação, acrescente um objeto ao array `PUBLICATIONS` com
-`year`, `type` (`journal`, `conference`, `preprint`, `thesis` ou `dataset`),
-`title`, `authors`, `venue`, `doi` e `cites`. Use a constante `ME` na lista de
-autores para que o nome apareça em destaque. Os filtros, as contagens e as métricas
-do topo são calculados automaticamente.
+Ao cadastrar uma publicação, escreva seu nome exatamente como `Leal Neto, H. B.`
+para que apareça em negrito na lista de autores. O campo `type` aceita `journal`,
+`conference`, `preprint`, `thesis` e `dataset` — é ele que alimenta os filtros.
 
 ## Desenvolvimento local
 
