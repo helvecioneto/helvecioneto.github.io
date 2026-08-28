@@ -53,10 +53,8 @@ const PUB_TYPES = [
 
 const COLLECTIONS = {
   text: {
-    table: 'site_text', pk: 'key', nav: 'Textos',
-    title: 'Textos da página',
-    intro: 'Todo texto visível do site, com as duas línguas lado a lado. As chaves estão ligadas à estrutura da página — por isso não é possível criar nem apagar linhas aqui.',
-    noAdd: true, noDelete: true, noReorder: true, groupBy: 'section',
+    table: 'site_text', pk: 'key',
+    noAdd: true, noDelete: true, noReorder: true,
     titleOf: (r) => r.label || trunc(r.pt) || r.key,
     metaOf:  (r) => r.key,
     fields: [
@@ -66,7 +64,7 @@ const COLLECTIONS = {
   },
 
   publications: {
-    table: 'publications', pk: 'id', nav: 'Publicações',
+    table: 'publications', pk: 'id',
     title: 'Publicações',
     intro: 'Os filtros por tipo, as contagens e as métricas do topo do site são calculados a partir desta lista. Escreva seu próprio nome exatamente como "Leal Neto, H. B." para que apareça em negrito.',
     titleOf: (r) => r.title || '(sem título)',
@@ -87,7 +85,7 @@ const COLLECTIONS = {
   },
 
   research_areas: {
-    table: 'research_areas', pk: 'id', nav: 'Linhas de pesquisa',
+    table: 'research_areas', pk: 'id',
     title: 'Linhas de pesquisa',
     intro: 'Os cartões numerados da seção Pesquisa. A numeração acompanha a ordem automaticamente.',
     titleOf: (r) => r.title_pt || '(sem título)',
@@ -105,7 +103,7 @@ const COLLECTIONS = {
   },
 
   research_groups: {
-    table: 'research_groups', pk: 'id', nav: 'Grupos de pesquisa',
+    table: 'research_groups', pk: 'id',
     title: 'Grupos de pesquisa',
     intro: 'Grupos aos quais você é vinculado, exibidos logo abaixo das linhas de pesquisa.',
     titleOf: (r) => r.acronym || r.name_pt || '(sem nome)',
@@ -124,7 +122,7 @@ const COLLECTIONS = {
   },
 
   courses: {
-    table: 'courses', pk: 'id', nav: 'Disciplinas',
+    table: 'courses', pk: 'id',
     title: 'Disciplinas',
     intro: 'Componentes curriculares exibidos na seção Ensino.',
     titleOf: (r) => r.title_pt || '(sem título)',
@@ -148,7 +146,7 @@ const COLLECTIONS = {
   },
 
   software: {
-    table: 'software', pk: 'id', nav: 'Software',
+    table: 'software', pk: 'id',
     title: 'Software científico',
     intro: 'Projetos exibidos na seção Software. O total de estrelas alimenta a métrica do topo do site.',
     titleOf: (r) => r.name || '(sem nome)',
@@ -170,7 +168,7 @@ const COLLECTIONS = {
   },
 
   education: {
-    table: 'education', pk: 'id', nav: 'Formação',
+    table: 'education', pk: 'id',
     title: 'Formação acadêmica',
     intro: 'A linha do tempo da seção Formação. O primeiro item recebe o marcador preenchido.',
     titleOf: (r) => r.degree_pt || '(sem título)',
@@ -197,7 +195,7 @@ const COLLECTIONS = {
   },
 
   links: {
-    table: 'links', pk: 'id', nav: 'Links de perfil',
+    table: 'links', pk: 'id',
     title: 'Links de perfil',
     intro: 'Os botões abaixo do seu nome, no topo do site.',
     titleOf: (r) => r.label || '(sem rótulo)',
@@ -216,6 +214,86 @@ const COLLECTIONS = {
     ]
   }
 };
+
+/* =============================================================================
+   Seções do painel
+
+   A navegação segue exatamente a ordem das seções da página pública, para que
+   editar seja procurar pelo mesmo nome que se vê no site. Cada seção reúne
+   blocos: trechos de texto e, quando existem, as fichas daquela seção.
+   ========================================================================== */
+
+const SECTIONS = [
+  {
+    id: 'perfil', nav: 'Perfil',
+    intro: 'Seu nome, cargo e unidade no topo da página, a biografia e o quadro lateral com o resumo.',
+    blocks: [
+      { kind: 'text', label: 'Topo da página', from: ['Topo'] },
+      { kind: 'rec',  label: 'Links de perfil', col: 'links' },
+      { kind: 'text', label: 'Perfil acadêmico', from: ['Perfil'] }
+    ]
+  },
+  {
+    id: 'pesquisa', nav: 'Pesquisa',
+    intro: 'Os cartões de linhas de pesquisa e os grupos aos quais você é vinculado.',
+    blocks: [
+      { kind: 'text', label: 'Cabeçalho da seção', from: ['Pesquisa'] },
+      { kind: 'rec',  label: 'Linhas de pesquisa', col: 'research_areas' },
+      { kind: 'rec',  label: 'Grupos de pesquisa', col: 'research_groups' }
+    ]
+  },
+  {
+    id: 'publicacoes', nav: 'Publicações',
+    intro: 'Sua produção científica. Os filtros por tipo e as contagens são calculados a partir desta lista.',
+    blocks: [
+      { kind: 'rec',  label: 'Publicações', col: 'publications' },
+      { kind: 'text', label: 'Cabeçalho e rótulos dos filtros', from: ['Publicações'] }
+    ]
+  },
+  {
+    id: 'ensino', nav: 'Ensino',
+    intro: 'As disciplinas que você ministra, com código, carga horária e tópicos.',
+    blocks: [
+      { kind: 'rec',  label: 'Disciplinas', col: 'courses' },
+      { kind: 'text', label: 'Cabeçalho da seção', from: ['Ensino'] }
+    ]
+  },
+  {
+    id: 'produtos', nav: 'Produtos',
+    intro: 'Bibliotecas, ferramentas e demais produtos que você desenvolve e mantém.',
+    blocks: [
+      { kind: 'rec',  label: 'Produtos', col: 'software' },
+      { kind: 'text', label: 'Cabeçalho da seção', from: ['Produtos'] }
+    ]
+  },
+  {
+    id: 'formacao', nav: 'Formação',
+    intro: 'A linha do tempo da sua formação acadêmica. O item mais acima recebe o marcador preenchido.',
+    blocks: [
+      { kind: 'rec',  label: 'Formação', col: 'education' },
+      { kind: 'text', label: 'Cabeçalho da seção', from: ['Formação'] }
+    ]
+  },
+  {
+    id: 'contato', nav: 'Contato',
+    intro: 'Seus dados de contato e todos os rótulos do formulário, incluindo os motivos e as mensagens de erro.',
+    blocks: [
+      { kind: 'text', label: 'Dados de contato', from: ['Contato'] },
+      { kind: 'text', label: 'Formulário', from: ['Formulário'] }
+    ]
+  },
+  {
+    id: 'geral', nav: 'Geral',
+    intro: 'O que não pertence a uma seção só: título da aba do navegador, descrição para buscadores, nomes do menu e rodapé.',
+    blocks: [
+      { kind: 'text', label: 'Buscadores e aba do navegador', from: ['Metadados'] },
+      { kind: 'text', label: 'Menu de navegação', from: ['Navegação', 'Geral'] },
+      { kind: 'text', label: 'Rodapé', from: ['Rodapé'] }
+    ]
+  }
+];
+
+const sectionById = (id) => SECTIONS.find((s) => s.id === id);
 
 /* =============================================================================
    Sessão
@@ -291,7 +369,7 @@ async function db(path, opts = {}) {
 async function loadCollection(name) {
   const c = COLLECTIONS[name];
   state.data[name] = await db(`/${c.table}?select=*&order=sort_order.asc`);
-  tag(state.data[name]);
+  tag(state.data[name], name);
 }
 
 async function loadAll() {
@@ -376,39 +454,47 @@ function recordHTML(c, rec, i, total) {
     </article>`;
 }
 
-function render() {
-  const name = state.active;
-  const c = COLLECTIONS[name];
-  const rows = state.data[name] || [];
+function blockRecordsHTML(block, q) {
+  const col = block.kind === 'text' ? 'text' : block.col;
+  const c = COLLECTIONS[col];
+  const all = state.data[col] || [];
 
-  $('#view-title').textContent = c.title;
-  $('#view-intro').textContent = c.intro;
-  $('#btn-add').hidden = !!c.noAdd;
+  const inBlock = block.kind === 'text'
+    ? all.filter((r) => block.from.includes(r.section))
+    : all;
+
+  const shown = q ? inBlock.filter((r) => JSON.stringify(r).toLowerCase().includes(q)) : inBlock;
+
+  const addBtn = c.noAdd ? '' :
+    `<button class="btn btn--sm btn--quiet" type="button" data-add="${col}">Adicionar</button>`;
+
+  const body = shown.length
+    ? shown.map((r) => recordHTML(c, r, inBlock.indexOf(r), inBlock.length)).join('')
+    : `<p class="empty">${q ? 'Nada encontrado aqui.' : 'Nenhum item ainda.'}</p>`;
+
+  return `<section class="block">
+    <header class="block__head">
+      <h3>${esc(block.label)}</h3>
+      <span class="block__n">${shown.length}${q && shown.length !== inBlock.length ? ` de ${inBlock.length}` : ''}</span>
+      <span class="spacer"></span>
+      ${addBtn}
+    </header>
+    ${body}
+  </section>`;
+}
+
+function render() {
+  const sec = sectionById(state.active);
+  if (!sec) return;
+
+  $('#view-title').textContent = sec.nav;
+  $('#view-intro').textContent = sec.intro;
 
   const q = state.filter.trim().toLowerCase();
-  const shown = q
-    ? rows.filter((r) => JSON.stringify(r).toLowerCase().includes(q))
-    : rows;
-
-  const host = $('#records');
-  if (!shown.length) {
-    host.innerHTML = `<p class="empty">${q ? 'Nada encontrado para essa busca.' : 'Nenhum item ainda.'}</p>`;
-  } else if (c.groupBy) {
-    const groups = {};
-    shown.forEach((r) => { (groups[r[c.groupBy] || 'Geral'] ||= []).push(r); });
-    host.innerHTML = Object.entries(groups).map(([g, items]) =>
-      `<h3 class="group-head">${esc(g)}</h3>` +
-      items.map((r) => recordHTML(c, r, rows.indexOf(r), rows.length)).join('')
-    ).join('');
-  } else {
-    host.innerHTML = shown.map((r) => recordHTML(c, r, rows.indexOf(r), rows.length)).join('');
-  }
+  $('#records').innerHTML = sec.blocks.map((b) => blockRecordsHTML(b, q)).join('');
 
   $$('#side-nav button').forEach((b) => {
-    b.setAttribute('aria-current', String(b.dataset.col === name));
-    const n = (state.data[b.dataset.col] || []).length;
-    const badge = $('.count', b);
-    if (badge) badge.textContent = n || '';
+    b.setAttribute('aria-current', String(b.dataset.sec === state.active));
   });
 }
 
@@ -436,9 +522,9 @@ function payloadOf(c, rec) {
 }
 
 async function saveRecord(uid) {
-  const c = COLLECTIONS[state.active];
-  const rows = state.data[state.active];
-  const rec = rows.find((r) => r.__uid === uid);
+  const rec = findRec(uid);
+  const c = COLLECTIONS[rec.__col];
+  const rows = state.data[rec.__col];
   const el = $(`.rec[data-uid="${uid}"]`);
   collectInto(rec, el);
 
@@ -457,8 +543,9 @@ async function saveRecord(uid) {
 }
 
 async function swapOrder(uid, dir) {
-  const c = COLLECTIONS[state.active];
-  const rows = state.data[state.active];
+  const rec0 = findRec(uid);
+  const c = COLLECTIONS[rec0.__col];
+  const rows = state.data[rec0.__col];
   const i = rows.findIndex((r) => r.__uid === uid);
   const j = i + dir;
   if (j < 0 || j >= rows.length) return;
@@ -479,33 +566,35 @@ async function swapOrder(uid, dir) {
    ========================================================================== */
 
 let uidSeq = 0;
-const tag = (rows) => rows.map((r) => Object.assign(r, { __uid: 'u' + (++uidSeq) }));
 
-async function openCollection(name) {
+/* Cada ficha carrega a coleção de onde veio: numa mesma tela convivem textos e
+   registros, e salvar/apagar precisa saber em qual tabela mexer. */
+const tag = (rows, col) => rows.map((r) => Object.assign(r, { __uid: 'u' + (++uidSeq), __col: col }));
+
+const findRec = (uid) => {
+  for (const col of Object.keys(state.data)) {
+    const hit = (state.data[col] || []).find((r) => r.__uid === uid);
+    if (hit) return hit;
+  }
+  return null;
+};
+
+function openSection(id) {
   if (state.dirty.size && !confirm('Há alterações não salvas. Sair mesmo assim?')) return;
-  state.active = name;
+  state.active = id;
   state.dirty.clear();
   state.open.clear();
   state.filter = '';
   $('#search').value = '';
-  if (!state.data[name]) {
-    $('#records').innerHTML = '<p class="empty">Carregando…</p>';
-    render();
-    try {
-      await loadCollection(name);
-    } catch (err) {
-      $('#records').innerHTML = `<p class="empty">${esc(err.message)}</p>`;
-      if (/sessão/.test(err.message)) showLogin();
-      return;
-    }
-  }
   render();
+  $('.main').scrollTop = 0;
+  window.scrollTo(0, 0);
 }
 
 function wireApp() {
   $('#side-nav').addEventListener('click', (ev) => {
-    const b = ev.target.closest('button[data-col]');
-    if (b) openCollection(b.dataset.col);
+    const b = ev.target.closest('button[data-sec]');
+    if (b) openSection(b.dataset.sec);
   });
 
   $('#search').addEventListener('input', (ev) => {
@@ -513,17 +602,21 @@ function wireApp() {
     render();
   });
 
-  $('#btn-add').addEventListener('click', () => {
-    const c = COLLECTIONS[state.active];
-    const rec = Object.assign(c.blank(), { __uid: 'u' + (++uidSeq), __new: true, sort_order: 9999 });
-    state.data[state.active].push(rec);
-    state.open.add(rec.__uid);
-    state.dirty.add(rec.__uid);
-    render();
-    $(`.rec[data-uid="${rec.__uid}"]`)?.scrollIntoView({ block: 'center', behavior: 'smooth' });
-  });
-
   $('#records').addEventListener('click', async (ev) => {
+    const add = ev.target.closest('[data-add]');
+    if (add) {
+      const col = add.dataset.add;
+      const c = COLLECTIONS[col];
+      const rec = Object.assign(c.blank(),
+        { __uid: 'u' + (++uidSeq), __col: col, __new: true, sort_order: 9999 });
+      state.data[col].push(rec);
+      state.open.add(rec.__uid);
+      state.dirty.add(rec.__uid);
+      render();
+      $(`.rec[data-uid="${rec.__uid}"]`)?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      return;
+    }
+
     const btn = ev.target.closest('[data-act]');
     if (!btn) return;
     const card = btn.closest('.rec');
@@ -553,9 +646,9 @@ function wireApp() {
     }
 
     if (act === 'delete') {
-      const c = COLLECTIONS[state.active];
-      const rows = state.data[state.active];
-      const rec = rows.find((r) => r.__uid === uid);
+      const rec = findRec(uid);
+      const c = COLLECTIONS[rec.__col];
+      const rows = state.data[rec.__col];
       if (!confirm(`Apagar "${c.titleOf(rec)}"? Isso não pode ser desfeito.`)) return;
       try {
         if (!rec.__new) {
@@ -638,7 +731,7 @@ function wireLogin() {
       await signIn($('#login-email').value.trim(), $('#login-pass').value);
       showApp();
       await loadAll();
-      await openCollection('text');
+      openSection(SECTIONS[0].id);
     } catch (e) {
       err.textContent = /Invalid login/i.test(e.message)
         ? 'E-mail ou senha incorretos.' : e.message;
@@ -652,8 +745,8 @@ function wireLogin() {
 
 document.addEventListener('DOMContentLoaded', async () => {
   // Menu lateral montado a partir da definição das coleções.
-  $('#side-nav').innerHTML = Object.entries(COLLECTIONS).map(([k, c]) =>
-    `<button type="button" data-col="${k}">${esc(c.nav)}<span class="count"></span></button>`).join('');
+  $('#side-nav').innerHTML = SECTIONS.map((sec) =>
+    `<button type="button" data-sec="${sec.id}">${esc(sec.nav)}</button>`).join('');
 
   wireLogin();
   wireApp();
@@ -664,7 +757,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       await refreshIfNeeded();
       showApp();
       await loadAll();
-      await openCollection('text');
+      openSection(SECTIONS[0].id);
     } catch (e) {
       showLogin();
     }

@@ -281,17 +281,6 @@ function renderEducation() {
   }).join('');
 }
 
-function renderMetrics() {
-  const el = $('#metric-pubs');
-  if (el) el.textContent = PUBLICATIONS.length;
-  const cites = $('#metric-cites');
-  if (cites) cites.textContent = PUBLICATIONS.reduce((sum, p) => sum + p.cites, 0);
-  const courses = $('#metric-courses');
-  if (courses) courses.textContent = COURSES.length;
-  const stars = $('#metric-stars');
-  if (stars) stars.textContent = SOFTWARE.reduce((sum, s) => sum + s.stars, 0);
-}
-
 function renderAll() {
   renderLinks();
   renderResearch();
@@ -301,7 +290,6 @@ function renderAll() {
   renderCourses();
   renderSoftware();
   renderEducation();
-  renderMetrics();
   observeReveals();
 }
 

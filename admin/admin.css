@@ -397,3 +397,30 @@ body.admin {
   margin-bottom: 1.5rem;
 }
 .note--warn { background: var(--brass-wash); border-left-color: var(--brass); }
+
+/* --- Blocos dentro de uma seção ------------------------------------------- */
+.block { margin-bottom: 2.5rem; }
+.block:last-child { margin-bottom: 0; }
+
+.block__head {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding-bottom: .5rem;
+  margin-bottom: .85rem;
+  border-bottom: 1px solid var(--rule);
+}
+.block__head h3 {
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  color: var(--brass);
+}
+.block__n {
+  font-family: var(--mono);
+  font-size: .7rem;
+  color: var(--ink-faint);
+}
+.block__head .spacer { flex: 1; }
+.block .empty { padding: 1.5rem 1rem; }
