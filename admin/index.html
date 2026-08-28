@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel de edição — Helvecio B. Leal Neto</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#1B4332">
+<link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/style.css">
+<link rel="stylesheet" href="admin.css">
+</head>
+
+<body class="admin">
+
+<!-- ====================================================================== -->
+<!-- Login                                                                   -->
+<!-- ====================================================================== -->
+<section class="login" id="login" hidden>
+  <div class="login__card">
+    <div class="login__mark" aria-hidden="true">HL</div>
+    <h1>Painel de edição</h1>
+    <p class="login__sub">Entre para editar o conteúdo do site.</p>
+
+    <form id="login-form" novalidate>
+      <div class="fld" style="margin-top:0">
+        <label for="login-email">E-mail</label>
+        <input type="email" id="login-email" autocomplete="username"
+               value="helvecio.leal@ufopa.edu.br" required>
+      </div>
+      <div class="fld">
+        <label for="login-pass">Senha</label>
+        <input type="password" id="login-pass" autocomplete="current-password" required autofocus>
+      </div>
+      <p class="form__status form__status--err is-visible" id="login-error" hidden
+         style="margin-bottom:1rem"></p>
+      <button class="btn" type="submit" id="login-btn" style="margin-top:1.25rem">Entrar</button>
+    </form>
+
+    <a class="login__back" href="../">&larr; Voltar ao site</a>
+  </div>
+</section>
+
+<!-- ====================================================================== -->
+<!-- Painel                                                                  -->
+<!-- ====================================================================== -->
+<div class="shell" id="app" hidden>
+
+  <aside class="side">
+    <div class="side__brand">
+      <strong>Helvecio B. Leal Neto</strong>
+      <span>Painel de edição</span>
+    </div>
+
+    <nav id="side-nav" aria-label="Coleções"></nav>
+
+    <div class="side__foot">
+      <span class="side__user" id="side-user"></span>
+      <a href="../" target="_blank" rel="noopener">Ver o site &nearr;</a>
+      <button type="button" id="btn-logout">Sair</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="main__head">
+      <div>
+        <h2 id="view-title">Textos da página</h2>
+        <p id="view-intro"></p>
+      </div>
+      <button class="btn btn--sm" type="button" id="btn-add">Adicionar</button>
+    </header>
+
+    <p class="note">
+      As alterações entram no ar assim que você salva — o site lê direto do banco,
+      sem precisar de novo commit. Recarregue a página pública para conferir.
+    </p>
+
+    <div class="toolbar">
+      <input type="search" id="search" placeholder="Buscar nesta seção…" aria-label="Buscar">
+    </div>
+
+    <div id="records"></div>
+  </main>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="admin.js"></script>
+</body>
+</html>

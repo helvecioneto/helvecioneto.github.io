@@ -102,13 +102,9 @@ function renderResearch() {
 function renderGroups() {
   const host = $('#research-groups');
   if (!host) return;
-  const groups = [
-    { acr: 'SInApSE', key: 'research.g1' },
-    { acr: 'LABREN',  key: 'research.g2' }
-  ];
-  host.innerHTML = groups.map((g) => `
+  host.innerHTML = RESEARCH_GROUPS.map((g) => `
     <article class="group">
-      <span class="group__acr">${g.acr}</span>
+      <span class="group__acr">${esc(g.acronym)}</span>
       <div class="group__body">
         <strong>${t(g.key + '.n')}</strong>
         <p>${t(g.key + '.d')}</p>
@@ -223,6 +219,28 @@ function renderCourses() {
   }).join('');
 }
 
+const ICONS = {
+  mail:     '<rect x="1.5" y="3" width="13" height="10" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M2 4l6 4.5L14 4" fill="none" stroke="currentColor" stroke-width="1.4"/>',
+  orcid:    '<circle cx="8" cy="8" r="7.2" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M6.2 5.2h1v5.6h-1zM8.6 5.2h2.1c1.5 0 2.5 1.1 2.5 2.8s-1 2.8-2.5 2.8H8.6zm1 1v3.6h1c1 0 1.6-.7 1.6-1.8S11.6 6.2 10.6 6.2z"/>',
+  scholar:  '<path d="M8 1L.8 5.4 8 9.8l7.2-4.4z"/><path d="M3.4 8v3.3c0 1.4 2.1 2.5 4.6 2.5s4.6-1.1 4.6-2.5V8L8 10.8z"/>',
+  lattes:   '<path d="M3 2h7l3 3v9H3z" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M9.5 2v3.5H13M5.5 8.5h5M5.5 11h5" fill="none" stroke="currentColor" stroke-width="1.4"/>',
+  github:   '<path d="M8 .4a7.6 7.6 0 00-2.4 14.8c.4.1.5-.2.5-.4v-1.4c-2.1.5-2.6-1-2.6-1-.3-.9-.8-1.1-.8-1.1-.7-.5 0-.5 0-.5.8.1 1.2.8 1.2.8.7 1.2 1.8.9 2.3.7.1-.5.3-.9.5-1.1-1.7-.2-3.5-.9-3.5-3.9 0-.9.3-1.6.8-2.1-.1-.2-.4-1 .1-2.1 0 0 .7-.2 2.1.8a7.2 7.2 0 013.8 0c1.4-1 2.1-.8 2.1-.8.5 1.1.2 1.9.1 2.1.5.5.8 1.2.8 2.1 0 3-1.8 3.7-3.5 3.9.3.2.5.7.5 1.5v2.2c0 .2.1.5.6.4A7.6 7.6 0 008 .4z"/>',
+  linkedin: '<path d="M3.4 5.4h2.1V14H3.4zM4.5 1.9a1.3 1.3 0 110 2.5 1.3 1.3 0 010-2.5zM7.2 5.4h2v1.2h.1c.3-.6 1-1.2 2.1-1.2 2.3 0 2.7 1.5 2.7 3.4V14h-2.1V9.3c0-1.1 0-2.5-1.5-2.5s-1.7 1.2-1.7 2.4V14h-2z"/>',
+  link:     '<path d="M6.5 9.5a3 3 0 004.2 0l2.1-2.1a3 3 0 00-4.2-4.2l-1 1M9.5 6.5a3 3 0 00-4.2 0L3.2 8.6a3 3 0 004.2 4.2l1-1" fill="none" stroke="currentColor" stroke-width="1.4"/>'
+};
+
+function renderLinks() {
+  const host = $('#profile-links');
+  if (!host) return;
+  host.innerHTML = LINKS.map((l) => {
+    const external = /^https?:/i.test(l.url);
+    return `<a class="chip" href="${esc(l.url)}"${external ? ' target="_blank" rel="noopener"' : ''}>
+      <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">${ICONS[l.icon] || ICONS.link}</svg>
+      ${esc(l.label)}
+    </a>`;
+  }).join('');
+}
+
 const STAR = '<svg viewBox="0 0 16 16" width="11" height="11" fill="currentColor" aria-hidden="true"><path d="M8 .8l2.2 4.5 5 .7-3.6 3.5.8 4.9L8 12.1 3.6 14.4l.8-4.9L.8 6l5-.7z"/></svg>';
 
 function renderSoftware() {
@@ -275,6 +293,7 @@ function renderMetrics() {
 }
 
 function renderAll() {
+  renderLinks();
   renderResearch();
   renderGroups();
   renderFilters();
@@ -539,4 +558,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const year = $('#year');
   if (year) year.textContent = new Date().getFullYear();
+
+  // O conteúdo embutido já está na tela; troca pela versão viva do banco se ela
+  // vier. Uma falha aqui é silenciosa de propósito: o visitante continua vendo
+  // a página completa em vez de um erro.
+  if (typeof loadRemoteContent === 'function') {
+    loadRemoteContent()
+      .then(() => { applyI18n(); renderAll(); })
+      .catch((err) => console.info('conteúdo remoto indisponível, usando cópia local:', err.message));
+  }
 });
