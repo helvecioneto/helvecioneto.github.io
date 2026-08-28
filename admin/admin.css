@@ -217,7 +217,17 @@ body.admin {
   color: var(--brass);
 }
 
-.rec__body { display: none; padding: .25rem 1rem 1.1rem; border-top: 1px solid var(--rule); }
+/* Com o cartão aberto a barra acompanha a rolagem: num formulário longo é
+   fácil perder de vista qual registro está sendo editado. */
+.rec--open .rec__bar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--paper);
+  border-bottom: 1px solid var(--rule);
+}
+
+.rec__body { display: none; padding: .25rem 1rem 1.1rem; }
 .rec--open .rec__body { display: block; }
 
 .rec__actions {

@@ -573,11 +573,12 @@ ul { margin: 0; padding: 0; list-style: none; }
    e a largura fixa impede que um logo largo empurre o texto. */
 .group__logo {
   flex: none;
-  width: 5rem;
-  height: 3rem;
+  width: 6.75rem;
+  height: 4rem;
   object-fit: contain;
   object-position: left top;
 }
+@media (max-width: 480px) { .group__logo { width: 5.5rem; height: 3.25rem; } }
 
 .group__link {
   color: inherit;
