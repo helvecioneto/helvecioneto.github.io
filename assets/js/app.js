@@ -1,0 +1,542 @@
+/* =============================================================================
+   app.js — rendering, i18n and interaction
+   ========================================================================== */
+
+/* -----------------------------------------------------------------------------
+   CONFIGURAÇÃO / CONFIGURATION
+
+   Access Key do Web3Forms (https://web3forms.com). As mensagens do formulário
+   chegam em CONTACT_EMAIL com o assunto "[Motivo do contato] Nome do remetente".
+
+   A chave é um identificador público, feito para ficar visível no código do
+   cliente: ela só autoriza o envio para o e-mail já cadastrado, e não dá acesso
+   a nenhuma conta. Para trocá-la, gere outra em web3forms.com e substitua abaixo.
+
+   Se o valor deixar de ser um UUID válido, o formulário passa a operar em modo de
+   reserva: monta um e-mail pré-preenchido e abre o programa de e-mail do visitante.
+   -------------------------------------------------------------------------- */
+const WEB3FORMS_KEY = '87b161de-119a-4f6e-bdc6-5b7f086f178d';
+const CONTACT_EMAIL = 'helvecio.leal@ufopa.edu.br';
+
+const SUPPORTED = ['pt', 'en'];
+const STORE_KEY = 'hbln-lang';
+
+let lang = 'pt';
+
+/* --- Helpers ------------------------------------------------------------- */
+const $  = (sel, root = document) => root.querySelector(sel);
+const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+
+const t = (key) => {
+  const v = I18N[lang][key];
+  return v === undefined ? (I18N.pt[key] !== undefined ? I18N.pt[key] : key) : v;
+};
+
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => (
+  { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+));
+
+/* --- Language detection & persistence ------------------------------------ */
+function detectLang() {
+  // An explicit ?lang= in the URL wins, so a shared link opens in the language
+  // the sender intended even when the visitor has a stored preference.
+  const url = new URLSearchParams(location.search).get('lang');
+  if (SUPPORTED.includes(url)) return url;
+
+  let stored = null;
+  try { stored = localStorage.getItem(STORE_KEY); } catch (e) { /* private mode */ }
+  if (SUPPORTED.includes(stored)) return stored;
+
+  const nav = (navigator.languages || [navigator.language || 'pt'])[0] || 'pt';
+  return nav.toLowerCase().startsWith('pt') ? 'pt' : 'en';
+}
+
+function persistLang(value) {
+  try { localStorage.setItem(STORE_KEY, value); } catch (e) { /* private mode */ }
+}
+
+/* --- Apply translations --------------------------------------------------- */
+function applyI18n() {
+  document.documentElement.lang = lang === 'pt' ? 'pt-BR' : 'en';
+
+  document.title = t('meta.title');
+  const desc = $('meta[name="description"]');
+  if (desc) desc.setAttribute('content', t('meta.description'));
+  const ogT = $('meta[property="og:title"]');
+  if (ogT) ogT.setAttribute('content', t('meta.title'));
+  const ogD = $('meta[property="og:description"]');
+  if (ogD) ogD.setAttribute('content', t('meta.description'));
+
+  $$('[data-i18n]').forEach((el) => { el.innerHTML = t(el.dataset.i18n); });
+  $$('[data-i18n-ph]').forEach((el) => { el.placeholder = t(el.dataset.i18nPh); });
+  $$('[data-i18n-aria]').forEach((el) => { el.setAttribute('aria-label', t(el.dataset.i18nAria)); });
+
+  $$('.lang button').forEach((b) => {
+    b.setAttribute('aria-pressed', String(b.dataset.lang === lang));
+  });
+}
+
+function setLang(value, rerender = true) {
+  if (!SUPPORTED.includes(value)) return;
+  lang = value;
+  persistLang(value);
+  applyI18n();
+  if (rerender) renderAll();
+}
+
+/* =============================================================================
+   Rendering
+   ========================================================================== */
+
+function renderResearch() {
+  const host = $('#research-areas');
+  if (!host) return;
+  host.innerHTML = RESEARCH_AREAS.map((k, i) => `
+    <article class="card">
+      <span class="card__num">${String(i + 1).padStart(2, '0')}</span>
+      <h3>${t(k + '.t')}</h3>
+      <p>${t(k + '.d')}</p>
+    </article>`).join('');
+}
+
+function renderGroups() {
+  const host = $('#research-groups');
+  if (!host) return;
+  const groups = [
+    { acr: 'SInApSE', key: 'research.g1' },
+    { acr: 'LABREN',  key: 'research.g2' }
+  ];
+  host.innerHTML = groups.map((g) => `
+    <article class="group">
+      <span class="group__acr">${g.acr}</span>
+      <div class="group__body">
+        <strong>${t(g.key + '.n')}</strong>
+        <p>${t(g.key + '.d')}</p>
+      </div>
+    </article>`).join('');
+}
+
+const TYPE_LABEL = {
+  journal:    'pubs.journal',
+  conference: 'pubs.conference',
+  preprint:   'pubs.preprint',
+  thesis:     'pubs.thesis',
+  dataset:    'pubs.dataset'
+};
+
+const TYPE_TAG = {
+  journal: 'tag--journal', conference: 'tag--conf', preprint: 'tag--preprint',
+  thesis: 'tag--thesis', dataset: 'tag--dataset'
+};
+
+/* Singularise the plural filter labels for use as a per-item badge. */
+function typeBadge(type) {
+  const label = t(TYPE_LABEL[type]);
+  const singular = {
+    'Periódicos': 'Artigo', 'Conferências': 'Conferência', 'Preprints': 'Preprint',
+    'Teses': 'Tese', 'Dados': 'Dataset',
+    'Journals': 'Article', 'Conferences': 'Conference', 'Theses': 'Thesis',
+    'Datasets': 'Dataset'
+  };
+  return singular[label] || label;
+}
+
+function renderPublications(filter = 'all') {
+  const host = $('#pubs-list');
+  if (!host) return;
+
+  const items = PUBLICATIONS.filter((p) => filter === 'all' || p.type === filter);
+
+  host.innerHTML = items.map((p, i) => {
+    const authors = p.authors
+      .map((a) => (a === ME ? `<span class="me">${esc(a)}</span>` : esc(a)))
+      .join('; ');
+
+    const title = p.doi
+      ? `<a href="https://doi.org/${esc(p.doi)}" target="_blank" rel="noopener">${esc(p.title)}</a>`
+      : esc(p.title);
+
+    const doi = p.doi
+      ? `<a class="pub__doi" href="https://doi.org/${esc(p.doi)}" target="_blank" rel="noopener">doi:${esc(p.doi)}</a>`
+      : '';
+
+    const cites = p.cites > 0
+      ? `<span class="pub__cites">${p.cites} ${t(p.cites === 1 ? 'pubs.cite' : 'pubs.cites')}</span>`
+      : '';
+
+    const venue = p.venueKey ? t(p.venueKey) : esc(p.venue);
+
+    return `
+      <article class="pub" style="animation-delay:${Math.min(i * 45, 400)}ms">
+        <div class="pub__year">${p.year}</div>
+        <div>
+          <h3 class="pub__title">${title}</h3>
+          <p class="pub__authors">${authors}</p>
+          <div class="pub__meta">
+            <span class="tag ${TYPE_TAG[p.type]}">${esc(typeBadge(p.type))}</span>
+            <span class="pub__venue">${venue}</span>
+            ${doi}
+            ${cites}
+          </div>
+        </div>
+      </article>`;
+  }).join('');
+}
+
+function renderFilters() {
+  const host = $('#pubs-filters');
+  if (!host) return;
+  const present = ['all'].concat(
+    ['journal', 'conference', 'preprint', 'thesis', 'dataset']
+      .filter((type) => PUBLICATIONS.some((p) => p.type === type))
+  );
+
+  const active = host.dataset.active || 'all';
+  host.innerHTML = present.map((type) => {
+    const label = type === 'all' ? t('pubs.all') : t(TYPE_LABEL[type]);
+    const count = type === 'all'
+      ? PUBLICATIONS.length
+      : PUBLICATIONS.filter((p) => p.type === type).length;
+    return `<button class="filter" type="button" data-filter="${type}"
+              aria-pressed="${type === active}">${esc(label)} <span aria-hidden="true">(${count})</span></button>`;
+  }).join('');
+}
+
+function renderCourses() {
+  const host = $('#courses');
+  if (!host) return;
+  host.innerHTML = COURSES.map((c) => {
+    const topics = t(c.key + '.u').map((u) => `<li>${esc(u)}</li>`).join('');
+    const link = c.url
+      ? `<a href="${esc(c.url)}" target="_blank" rel="noopener">${t('teaching.materials')} &rarr;</a>`
+      : '<span></span>';
+    return `
+      <article class="course">
+        <div class="course__code">${c.code ? esc(c.code) : '&nbsp;'}</div>
+        <h3>${t(c.key + '.t')}</h3>
+        <ul class="course__topics">${topics}</ul>
+        <div class="course__foot">
+          <span>${c.hours} ${t('teaching.hours')}</span>
+          ${link}
+        </div>
+      </article>`;
+  }).join('');
+}
+
+const STAR = '<svg viewBox="0 0 16 16" width="11" height="11" fill="currentColor" aria-hidden="true"><path d="M8 .8l2.2 4.5 5 .7-3.6 3.5.8 4.9L8 12.1 3.6 14.4l.8-4.9L.8 6l5-.7z"/></svg>';
+
+function renderSoftware() {
+  const host = $('#software-list');
+  if (!host) return;
+  host.innerHTML = SOFTWARE.map((s) => {
+    const stars = s.stars > 0 ? `<span class="repo__stars">${STAR} ${s.stars}</span>` : '';
+    const docs = s.docs
+      ? `<a href="${esc(s.docs)}"${s.docs.startsWith('http') ? ' target="_blank" rel="noopener"' : ''}>${t('soft.docs')} &rarr;</a>`
+      : '';
+    return `
+      <article class="repo${s.featured ? ' repo--featured' : ''}">
+        <div class="repo__top">
+          <h3>${esc(s.name)}</h3>
+          ${stars}
+        </div>
+        <p>${t(s.key + '.d')}</p>
+        <div class="repo__links">
+          <a href="${esc(s.repo)}" target="_blank" rel="noopener">${t('soft.repo')} &rarr;</a>
+          ${docs}
+        </div>
+      </article>`;
+  }).join('');
+}
+
+function renderEducation() {
+  const host = $('#education-list');
+  if (!host) return;
+  host.innerHTML = EDUCATION.map((k, i) => {
+    const note = t(k + '.n');
+    return `
+      <li class="tl-item${i === 0 ? ' tl-item--current' : ''}">
+        <div class="tl-item__when">${t(k + '.w')}</div>
+        <h3>${t(k + '.t')}</h3>
+        <div class="tl-item__where">${t(k + '.i')}</div>
+        ${note ? `<p class="tl-item__note">${note}</p>` : ''}
+      </li>`;
+  }).join('');
+}
+
+function renderMetrics() {
+  const el = $('#metric-pubs');
+  if (el) el.textContent = PUBLICATIONS.length;
+  const cites = $('#metric-cites');
+  if (cites) cites.textContent = PUBLICATIONS.reduce((sum, p) => sum + p.cites, 0);
+  const courses = $('#metric-courses');
+  if (courses) courses.textContent = COURSES.length;
+  const stars = $('#metric-stars');
+  if (stars) stars.textContent = SOFTWARE.reduce((sum, s) => sum + s.stars, 0);
+}
+
+function renderAll() {
+  renderResearch();
+  renderGroups();
+  renderFilters();
+  renderPublications($('#pubs-filters')?.dataset.active || 'all');
+  renderCourses();
+  renderSoftware();
+  renderEducation();
+  renderMetrics();
+  observeReveals();
+}
+
+/* =============================================================================
+   Interaction
+   ========================================================================== */
+
+function initLangSwitch() {
+  $$('.lang button').forEach((btn) => {
+    btn.addEventListener('click', () => setLang(btn.dataset.lang));
+  });
+}
+
+function initFilters() {
+  const host = $('#pubs-filters');
+  if (!host) return;
+  host.addEventListener('click', (ev) => {
+    const btn = ev.target.closest('[data-filter]');
+    if (!btn) return;
+    host.dataset.active = btn.dataset.filter;
+    $$('[data-filter]', host).forEach((b) => {
+      b.setAttribute('aria-pressed', String(b === btn));
+    });
+    renderPublications(btn.dataset.filter);
+  });
+}
+
+function initNav() {
+  const masthead = $('.masthead');
+  const burger = $('.burger');
+  const drawer = $('.drawer');
+
+  if (burger && drawer) {
+    burger.addEventListener('click', () => {
+      const open = burger.getAttribute('aria-expanded') === 'true';
+      burger.setAttribute('aria-expanded', String(!open));
+      drawer.classList.toggle('is-open', !open);
+    });
+    drawer.addEventListener('click', (ev) => {
+      if (ev.target.closest('a')) {
+        burger.setAttribute('aria-expanded', 'false');
+        drawer.classList.remove('is-open');
+      }
+    });
+  }
+
+  const onScroll = () => {
+    masthead?.classList.toggle('is-stuck', window.scrollY > 8);
+    const top = $('.totop');
+    top?.classList.toggle('is-visible', window.scrollY > 600);
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  $('.totop')?.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  // Highlight the section currently in view.
+  const links = $$('.nav a[href^="#"]');
+  const sections = links
+    .map((a) => document.getElementById(a.getAttribute('href').slice(1)))
+    .filter(Boolean);
+
+  if ('IntersectionObserver' in window && sections.length) {
+    const spy = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        links.forEach((a) => {
+          a.setAttribute('aria-current', String(a.getAttribute('href') === '#' + entry.target.id));
+        });
+      });
+    }, { rootMargin: '-45% 0px -50% 0px' });
+    sections.forEach((s) => spy.observe(s));
+  }
+}
+
+let revealObserver = null;
+function observeReveals() {
+  if (!('IntersectionObserver' in window)) {
+    $$('.reveal').forEach((el) => el.classList.add('is-in'));
+    return;
+  }
+  if (!revealObserver) {
+    revealObserver = new IntersectionObserver((entries, obs) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-in');
+          obs.unobserve(entry.target);
+        }
+      });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
+  }
+  $$('.reveal:not(.is-in)').forEach((el) => revealObserver.observe(el));
+}
+
+/* =============================================================================
+   Contact form
+   ========================================================================== */
+
+function fieldError(input, messageKey) {
+  const field = input.closest('.field');
+  if (!field) return;
+  field.classList.add('field--invalid');
+  const slot = $('.field__error', field);
+  if (slot) slot.textContent = t(messageKey);
+}
+
+function clearErrors(form) {
+  $$('.field--invalid', form).forEach((f) => f.classList.remove('field--invalid'));
+}
+
+function validate(form) {
+  clearErrors(form);
+  let firstBad = null;
+
+  const check = (name, test, key) => {
+    const input = form.elements[name];
+    if (!input) return;
+    if (!test(input.value.trim())) {
+      fieldError(input, key);
+      if (!firstBad) firstBad = input;
+    }
+  };
+
+  check('name', (v) => v.length > 1, 'form.eRequired');
+  check('email', (v) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v), 'form.eEmail');
+  check('reason', (v) => v.length > 0, 'form.eRequired');
+  check('message', (v) => v.length >= 20, 'form.eShort');
+
+  if (firstBad) {
+    firstBad.focus();
+    firstBad.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }
+  return !firstBad;
+}
+
+function showStatus(kind, messageKey) {
+  const box = $('#form-status');
+  if (!box) return;
+  box.className = 'form__status form__status--' + kind + ' is-visible';
+  box.textContent = t(messageKey);
+  box.setAttribute('role', kind === 'err' ? 'alert' : 'status');
+}
+
+/* The recipient reads Portuguese, so the reason is always labelled in pt-BR —
+   regardless of the language the visitor filled the form in. */
+const REASON_KEY = {
+  institucional: 'form.r1',
+  colaboracao:   'form.r2',
+  orientacao:    'form.r3',
+  parceria:      'form.r4',
+  outros:        'form.r5'
+};
+
+function reasonLabel(form) {
+  return I18N.pt[REASON_KEY[form.elements.reason.value]] || I18N.pt['form.r5'];
+}
+
+function buildSubject(form) {
+  return `[${reasonLabel(form)}] ${form.elements.name.value.trim()}`;
+}
+
+/* Built by hand rather than from FormData so the e-mail body carries readable
+   labels instead of the internal field names and the reason slug. */
+function buildPayload(form) {
+  return {
+    access_key: WEB3FORMS_KEY,
+    subject: buildSubject(form),
+    from_name: 'helvecioneto.github.io',
+    replyto: form.elements.email.value.trim(),
+    'Nome': form.elements.name.value.trim(),
+    'E-mail': form.elements.email.value.trim(),
+    'Instituição': form.elements.organisation.value.trim() || '—',
+    'Motivo do contato': reasonLabel(form),
+    'Mensagem': form.elements.message.value.trim(),
+    'Idioma da página': lang === 'pt' ? 'Português (BR)' : 'English'
+  };
+}
+
+function fallbackMailto(form) {
+  const body = [
+    `${t('form.name')}: ${form.elements.name.value.trim()}`,
+    `${t('form.email')}: ${form.elements.email.value.trim()}`,
+    `${t('form.org')}: ${form.elements.organisation.value.trim() || '—'}`,
+    '',
+    form.elements.message.value.trim()
+  ].join('\n');
+
+  const href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(buildSubject(form))}` +
+               `&body=${encodeURIComponent(body)}`;
+  window.location.href = href;
+  showStatus('ok', 'form.mailto');
+}
+
+function initForm() {
+  const form = $('#contact-form');
+  if (!form) return;
+
+  const keyConfigured = /^[0-9a-f-]{36}$/i.test(WEB3FORMS_KEY);
+
+  form.addEventListener('input', (ev) => {
+    ev.target.closest('.field')?.classList.remove('field--invalid');
+  });
+
+  form.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    if (!validate(form)) return;
+
+    // Honeypot: bots fill hidden fields, humans do not.
+    if (form.elements.botcheck && form.elements.botcheck.checked) return;
+
+    if (!keyConfigured) { fallbackMailto(form); return; }
+
+    const btn = $('#form-submit', form);
+    const label = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = t('form.sending');
+
+    try {
+      const res = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify(buildPayload(form))
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok && data.success) {
+        form.reset();
+        showStatus('ok', 'form.ok');
+      } else {
+        showStatus('err', 'form.err');
+      }
+    } catch (err) {
+      showStatus('err', 'form.err');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = label;
+    }
+  });
+}
+
+/* =============================================================================
+   Boot
+   ========================================================================== */
+document.addEventListener('DOMContentLoaded', () => {
+  lang = detectLang();
+  applyI18n();
+  renderAll();
+  initLangSwitch();
+  initFilters();
+  initNav();
+  initForm();
+
+  const year = $('#year');
+  if (year) year.textContent = new Date().getFullYear();
+});
