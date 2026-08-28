@@ -52,6 +52,45 @@ Para trocar a senha, use *Authentication → Users* no painel do Supabase. Para
 autorizar outra pessoa a editar, insira o e-mail dela em `admins` e crie o usuário
 correspondente — nenhuma dessas duas coisas basta sozinha.
 
+### Publicações e citações automáticas
+
+Toda segunda-feira, 06:00 UTC, o workflow `.github/workflows/sync-publications.yml`
+roda `scripts/sync-publications.js`, que busca trabalhos novos, atualiza as
+contagens de citação, regenera a cópia de reserva e faz o commit se algo mudou.
+Também dá para disparar à mão em *Actions → Sincronizar publicações → Run
+workflow*, com a opção de simular sem gravar.
+
+**O Google Scholar não pode ser lido por robô.** Ele não tem API pública e
+devolve CAPTCHA a qualquer acesso automatizado — de um IP de datacenter, como o
+do GitHub Actions, o bloqueio é ainda mais certo. Em lugar dele:
+
+| Fonte | Papel | Custo |
+|---|---|---|
+| OpenAlex | descobre trabalhos novos pelo ORCID e pelos IDs de autor | grátis, sem chave |
+| Semantic Scholar | contagem de citações, mais alta e mais próxima da do Scholar | grátis, sem chave |
+| SerpApi | *opcional*: números do próprio Google Scholar | pago, 100 buscas/mês no plano grátis |
+
+Para usar os números reais do Scholar, crie uma conta no [SerpApi](https://serpapi.com),
+pegue a chave e guarde-a como segredo do repositório:
+
+```sh
+gh secret set SERPAPI_KEY
+```
+
+O script passa a preferi-la; sem ela, segue com Semantic Scholar e OpenAlex. Uma
+sincronização semanal gasta cerca de 4 buscas por mês.
+
+Regras que a rotina respeita:
+
+- **Publicação já cadastrada só tem as citações atualizadas.** Título, veículo e
+  autores nunca são sobrescritos — podem ter sido corrigidos por você no painel.
+- **Nada é apagado.** Um trabalho que suma do OpenAlex continua no site.
+- **O que entra sozinho vem marcado como "importada"** na lista do painel, para
+  se distinguir do que você cadastrou.
+
+O casamento entre um trabalho de fora e um já existente é feito pelo DOI e, na
+falta dele, pelo título normalizado — daí não surgirem duplicatas.
+
 ### A cópia de reserva
 
 `assets/js/content.js` é um retrato do conteúdo embutido na própria página. Ele é
@@ -98,12 +137,16 @@ Pelo painel em `/admin`. As tabelas no Supabase são:
 |---|---|
 | `site_text` | todo texto da página, com `pt` e `en` lado a lado |
 | `publications` | publicações, com autores, veículo, DOI e citações |
-| `research_areas` / `research_groups` | linhas e grupos de pesquisa |
+| `research_areas` / `research_groups` | linhas e grupos de pesquisa (com logo e site) |
 | `courses` | disciplinas, com código, carga horária e tópicos |
 | `software` | produtos, estrelas e links |
 | `education` | linha do tempo da formação |
 | `links` | botões de perfil do topo |
 | `admins` | quem pode escrever (invisível para o cliente) |
+
+Imagens enviadas pelo painel vão para o bucket `media` do Supabase Storage:
+leitura pública, envio e remoção só para quem está em `admins`. O limite é 2 MB
+por arquivo, em PNG, JPG, WebP, SVG ou GIF.
 
 Ao cadastrar uma publicação, escreva seu nome exatamente como `Leal Neto, H. B.`
 para que apareça em negrito na lista de autores. O campo `type` aceita `journal`,

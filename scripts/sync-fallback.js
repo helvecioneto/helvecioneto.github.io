@@ -49,7 +49,7 @@ const str = (v) => JSON.stringify(v ?? '');
     const k = `research.g${i + 1}`;
     pt[k + '.n'] = g.name_pt; en[k + '.n'] = g.name_en;
     pt[k + '.d'] = g.org_pt;  en[k + '.d'] = g.org_en;
-    return { acronym: g.acronym, key: k };
+    return { acronym: g.acronym, key: k, logo: g.logo_url || null, site: g.site_url || null };
   });
 
   const pubList = pubs.map((p, i) => {

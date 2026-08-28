@@ -102,14 +102,27 @@ function renderResearch() {
 function renderGroups() {
   const host = $('#research-groups');
   if (!host) return;
-  host.innerHTML = RESEARCH_GROUPS.map((g) => `
+  host.innerHTML = RESEARCH_GROUPS.map((g) => {
+    // O logo substitui a sigla quando existe; sem ele a sigla segue identificando
+    // o grupo, de modo que um grupo sem marca própria não fica anônimo.
+    const mark = g.logo
+      ? `<img class="group__logo" src="${esc(g.logo)}" alt="${esc(g.acronym)}" loading="lazy">`
+      : `<span class="group__acr">${esc(g.acronym)}</span>`;
+
+    const name = t(g.key + '.n');
+    const title = g.site
+      ? `<a class="group__link" href="${esc(g.site)}" target="_blank" rel="noopener">${name}</a>`
+      : name;
+
+    return `
     <article class="group">
-      <span class="group__acr">${esc(g.acronym)}</span>
+      ${mark}
       <div class="group__body">
-        <strong>${t(g.key + '.n')}</strong>
+        <strong>${title}</strong>
         <p>${t(g.key + '.d')}</p>
       </div>
-    </article>`).join('');
+    </article>`;
+  }).join('');
 }
 
 const TYPE_LABEL = {
