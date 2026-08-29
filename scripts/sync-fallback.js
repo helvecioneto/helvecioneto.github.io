@@ -56,7 +56,8 @@ const str = (v) => JSON.stringify(v ?? '');
     const k = `pub.v${i}`;
     pt[k] = p.venue_pt || ''; en[k] = p.venue_en || p.venue_pt || '';
     return { year: p.year, type: p.type, title: p.title, authors: p.authors || [],
-             venue: p.venue_pt || '', venueKey: k, doi: p.doi, cites: p.cites || 0 };
+             venue: p.venue_pt || '', venueKey: k, doi: p.doi, url: p.url || null,
+             cites: p.cites || 0 };
   });
 
   const courseList = courses.map((c, i) => {
