@@ -222,8 +222,8 @@ const COLLECTIONS = {
     blank: () => ({ period_pt: '', period_en: '', degree_pt: '', degree_en: '', institution_pt: '', institution_en: '', note_pt: '', note_en: '' }),
     fields: [
       { pair: [
-        { k: 'period_pt', t: 'text', label: 'Período', lang: 'PT', help: 'Ex.: 2022 — 2026' },
-        { k: 'period_en', t: 'text', label: 'Period',  lang: 'EN' }
+        { k: 'period_pt', t: 'text', label: 'Ano de titulação', lang: 'PT', help: 'Ex.: 2025' },
+        { k: 'period_en', t: 'text', label: 'Year awarded',    lang: 'EN' }
       ] },
       { pair: [
         { k: 'degree_pt', t: 'text', label: 'Titulação', lang: 'PT' },
