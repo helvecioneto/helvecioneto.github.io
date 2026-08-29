@@ -91,23 +91,34 @@ Regras que a rotina respeita:
 O casamento entre um trabalho de fora e um já existente é feito pelo DOI e, na
 falta dele, pelo título normalizado — daí não surgirem duplicatas.
 
-### A cópia de reserva
+### O banco manda, e a reserva o acompanha
 
-`assets/js/content.js` é um retrato do conteúdo embutido na própria página. Ele é
-renderizado de imediato e depois substituído pelos dados do banco. Se o Supabase
-estiver fora do ar, bloqueado por rede corporativa ou **pausado por inatividade**
-— o plano gratuito pausa projetos parados por cerca de uma semana — o site
-continua completo, mostrando esse retrato em vez de quebrar.
+**O banco é a fonte de verdade.** A cada visita o site busca o conteúdo vivo no
+Supabase e redesenha com ele, então uma edição no painel vale imediatamente.
 
-Por isso a reserva precisa ser atualizada de vez em quando:
+O que a página desenha *antes* de o banco responder segue esta ordem:
+
+1. **O último conteúdo que aquele navegador recebeu do banco**, guardado em
+   `localStorage`. É o caso normal de quem já visitou o site: a página abre já
+   com a versão do banco, sem piscar nada.
+2. **`assets/js/content.js`**, o retrato embutido no deploy, na primeira visita
+   daquele navegador ou se a cópia guardada estiver ilegível.
+
+Esse retrato também é a rede de segurança quando o Supabase está fora do ar,
+bloqueado por rede corporativa ou **pausado por inatividade** — o plano gratuito
+pausa projetos parados por cerca de uma semana. Nessa situação, quem já conhece o
+site continua vendo a última versão do banco, e quem chega pela primeira vez vê o
+retrato do deploy, em vez de uma página quebrada.
+
+Para o retrato não envelhecer, `.github/workflows/sync-content.yml` o regenera de
+hora em hora a partir do banco e só commita quando algo mudou. Depois de uma
+rodada grande de edições, dá para não esperar: **Actions → Sincronizar cópia de
+reserva → Run workflow**. À mão, o mesmo efeito:
 
 ```sh
 node scripts/sync-fallback.js
 git commit -am "Atualiza a cópia de reserva do conteúdo"
 ```
-
-Rode isso depois de uma rodada de edições no painel. Sem isso, uma eventual queda
-do banco faria o site exibir conteúdo antigo.
 
 ## Formulário de contato
 
