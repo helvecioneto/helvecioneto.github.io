@@ -84,6 +84,7 @@
       <a href="#software"     data-i18n="nav.software">Software</a>
       <a href="#education"    data-i18n="nav.education">Formação</a>
       <a href="#contact"      data-i18n="nav.contact">Contato</a>
+      <a href="#agendamento"  data-i18n="nav.schedule" data-sched-nav hidden>Agendamento</a>
     </nav>
 
     <div class="lang" role="group" data-i18n-aria="lang.label" aria-label="Selecionar idioma">
@@ -106,6 +107,7 @@
       <li><a href="#software"     data-i18n="nav.software">Software</a></li>
       <li><a href="#education"    data-i18n="nav.education">Formação</a></li>
       <li><a href="#contact"      data-i18n="nav.contact">Contato</a></li>
+      <li data-sched-nav hidden><a href="#agendamento" data-i18n="nav.schedule">Agendamento</a></li>
     </ul>
   </nav>
 </header>
@@ -306,17 +308,6 @@
             <small data-i18n="contact.response"></small>
           </dd>
         </div>
-        <!-- Agendamento: item nativo da coluna de contato; o botão abre a
-             agenda do Google num modal. Oculto enquanto sched.url estiver
-             vazio no painel /admin. -->
-        <div class="contact-item" id="schedule" hidden>
-          <dt data-i18n="sched.title">Agende uma reunião</dt>
-          <dd>
-            <span data-i18n="sched.lede"></span>
-            <button class="btn btn--ghost sched-cta" type="button" id="schedule-cta"
-                    data-i18n="sched.cta">Ver horários disponíveis</button>
-          </dd>
-        </div>
         <div class="contact-item">
           <dt data-i18n="contact.office">Gabinete</dt>
           <dd data-i18n="contact.officeV"></dd>
@@ -394,6 +385,33 @@
   </div>
 </section>
 
+<!-- ====================================================================== -->
+<!-- 08 — Scheduling                                                         -->
+<!-- ====================================================================== -->
+<!-- Só aparece (na página e no menu) quando sched.url traz um link de agenda
+     de compromissos do Google Calendar, configurado no painel /admin. A página
+     incorporada exibe apenas os horários vagos dos dias liberados na própria
+     agenda — nunca o calendário completo. -->
+<section class="section section--alt" id="agendamento" hidden>
+  <div class="wrap">
+    <header class="section__head reveal">
+      <span class="section__index" data-i18n="sched.index">08 — Agendamento</span>
+      <h2 data-i18n="sched.title">Agende uma reunião</h2>
+      <p class="section__lede" data-i18n="sched.lede"></p>
+    </header>
+
+    <div class="schedule reveal">
+      <div class="schedule__frame">
+        <iframe id="schedule-iframe" title="Google Calendar" loading="lazy"></iframe>
+      </div>
+      <p class="schedule__alt">
+        <a id="schedule-link" class="btn btn--ghost" target="_blank" rel="noopener"
+           data-i18n="sched.open">Abrir a agenda em uma nova aba</a>
+      </p>
+    </div>
+  </div>
+</section>
+
 </main>
 
 <!-- ====================================================================== -->
@@ -416,6 +434,7 @@
           <li><a href="#teaching"     data-i18n="nav.teaching">Ensino</a></li>
           <li><a href="#software"     data-i18n="nav.software">Software</a></li>
           <li><a href="#contact"      data-i18n="nav.contact">Contato</a></li>
+          <li data-sched-nav hidden><a href="#agendamento" data-i18n="nav.schedule">Agendamento</a></li>
         </ul>
       </div>
 
@@ -438,26 +457,6 @@
     </div>
   </div>
 </footer>
-
-<!-- Modal de agendamento: a página do Google Calendar só é carregada quando
-     o visitante clica no botão, dentro de um diálogo com a identidade do site. -->
-<div class="sched-modal" id="schedule-modal" hidden>
-  <div class="sched-modal__backdrop" data-sched-close></div>
-  <div class="sched-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="sched-modal-title">
-    <header class="sched-modal__head">
-      <h3 id="sched-modal-title" data-i18n="sched.title">Agende uma reunião</h3>
-      <button class="sched-modal__close" type="button" data-sched-close
-              data-i18n-aria="sched.close" aria-label="Fechar">&times;</button>
-    </header>
-    <div class="sched-modal__body">
-      <iframe id="schedule-iframe" title="Google Calendar"></iframe>
-    </div>
-    <footer class="sched-modal__foot">
-      <a id="schedule-link" target="_blank" rel="noopener"
-         data-i18n="sched.open">Abrir a agenda em uma nova aba</a>
-    </footer>
-  </div>
-</div>
 
 <button class="totop" type="button" data-i18n-aria="totop" aria-label="Voltar ao topo">
   <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M8 13V3M3.5 7.5L8 3l4.5 4.5"/></svg>
