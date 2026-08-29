@@ -309,14 +309,28 @@ function renderScheduling() {
   if (!box) return;
 
   const url = String(I18N.pt['sched.url'] || I18N.en['sched.url'] || '').trim();
-  const valid = /^https:\/\/calendar\.google\.com\/calendar\/(u\/\d+\/)?appointments\//.test(url);
-  box.hidden = !valid;
-  if (!valid) return;
+  // O link completo pode vir com ou sem o segmento /calendar/; o curto
+  // (calendar.app.google) é o que o botão "Compartilhar" do Google copia.
+  const full = /^https:\/\/calendar\.google\.com\/(calendar\/)?(u\/\d+\/)?appointments\//.test(url);
+  const short = /^https:\/\/calendar\.app\.google\/[A-Za-z0-9_-]+$/.test(url);
+  box.hidden = !(full || short);
+  if (!full && !short) return;
 
-  // ?gv=true é o modo de incorporação da página de agendamento.
-  const src = url + (url.includes('?') ? '&' : '?') + 'gv=true';
-  const frame = $('#schedule-iframe');
-  if (frame && frame.getAttribute('src') !== src) frame.setAttribute('src', src);
+  const wrap = $('.schedule__frame');
+  if (full) {
+    // Só a forma com /calendar/ aceita ser incorporada (a outra envia
+    // X-Frame-Options); ?gv=true liga o modo de incorporação.
+    const embed = url.replace('calendar.google.com/appointments/',
+                              'calendar.google.com/calendar/appointments/');
+    const src = embed + (embed.includes('?') ? '&' : '?') + 'gv=true';
+    const frame = $('#schedule-iframe');
+    if (frame && frame.getAttribute('src') !== src) frame.setAttribute('src', src);
+    if (wrap) wrap.hidden = false;
+  } else if (wrap) {
+    // O link curto redireciona perdendo o ?gv=true e cai na forma que recusa
+    // iframe; sem como resolvê-lo no navegador, fica só o botão.
+    wrap.hidden = true;
+  }
 
   const link = $('#schedule-link');
   if (link) link.href = url;
