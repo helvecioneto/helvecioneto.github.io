@@ -287,12 +287,19 @@ function renderEducation() {
   if (!host) return;
   host.innerHTML = EDUCATION.map((k, i) => {
     const note = t(k + '.n');
+    // t() devolve a própria chave quando ela não existe, daí exigir um endereço
+    // de verdade em vez de só testar se veio algo.
+    const url = t(k + '.l');
+    const linked = /^https?:\/\//.test(url)
+      ? `<a href="${esc(url)}" target="_blank" rel="noopener">${note}</a>`
+      : note;
+
     return `
       <li class="tl-item${i === 0 ? ' tl-item--current' : ''}">
         <div class="tl-item__when">${t(k + '.w')}</div>
         <h3>${t(k + '.t')}</h3>
         <div class="tl-item__where">${t(k + '.i')}</div>
-        ${note ? `<p class="tl-item__note">${note}</p>` : ''}
+        ${note ? `<p class="tl-item__note">${linked}</p>` : ''}
       </li>`;
   }).join('');
 }

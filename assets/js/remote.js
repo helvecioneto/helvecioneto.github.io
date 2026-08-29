@@ -90,6 +90,7 @@ function applyRemote(data) {
     I18N.pt[key + '.t'] = e.degree_pt;      I18N.en[key + '.t'] = e.degree_en;
     I18N.pt[key + '.i'] = e.institution_pt; I18N.en[key + '.i'] = e.institution_en;
     I18N.pt[key + '.n'] = e.note_pt;        I18N.en[key + '.n'] = e.note_en;
+    I18N.pt[key + '.l'] = e.url || '';      I18N.en[key + '.l'] = e.url || '';
     return key;
   }));
 

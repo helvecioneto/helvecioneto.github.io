@@ -236,7 +236,8 @@ const COLLECTIONS = {
       { pair: [
         { k: 'note_pt', t: 'area', label: 'Observação', lang: 'PT', help: 'Opcional. Ex.: título da tese.' },
         { k: 'note_en', t: 'area', label: 'Note',       lang: 'EN' }
-      ] }
+      ] },
+      { k: 'url', t: 'url', label: 'Link da observação', help: 'Opcional. Com ele, a observação vira link — por exemplo, para a tese no repositório.' }
     ]
   },
 
