@@ -76,7 +76,9 @@ img { max-width: 100%; height: auto; display: block; }
 a   { color: var(--accent); text-decoration: none; }
 h1, h2, h3, h4 { margin: 0; font-weight: 400; letter-spacing: -.011em; }
 p  { margin: 0 0 1.1em; }
-ul { margin: 0; padding: 0; list-style: none; }
+/* A linha do tempo da formação é um <ol>: sem zerá-lo, ele mantém a numeração
+   e o marcador padrão, que empurra o conteúdo de cada item para baixo. */
+ul, ol { margin: 0; padding: 0; list-style: none; }
 
 ::selection { background: var(--accent); color: #fff; }
 
@@ -844,12 +846,22 @@ ul { margin: 0; padding: 0; list-style: none; }
 .repo__links a:hover { text-decoration: underline; text-underline-offset: 3px; }
 
 /* --- Education timeline ------------------------------------------------- */
-.timeline { position: relative; padding-left: 2rem; max-width: 48rem; }
+/* A linha e as bolinhas compartilham um mesmo eixo (--tl-x), e as duas são
+   centradas nele: sem isso a bolinha, que é mais larga que a linha, encosta o
+   lado esquerdo no eixo e fica deslocada meia largura para a direita. */
+.timeline {
+  --tl-x: .45rem;
+  --tl-dot: 13px;
+  position: relative;
+  padding-left: 2rem;
+  max-width: 48rem;
+}
 .timeline::before {
   content: '';
   position: absolute;
-  left: .3rem; top: .55rem; bottom: .55rem;
+  left: var(--tl-x); top: .6rem; bottom: .6rem;
   width: 1px;
+  transform: translateX(-.5px);
   background: linear-gradient(180deg, var(--accent-soft), var(--rule-strong));
 }
 .tl-item { position: relative; padding-bottom: 2.1rem; }
@@ -857,9 +869,14 @@ ul { margin: 0; padding: 0; list-style: none; }
 .tl-item::before {
   content: '';
   position: absolute;
-  left: -1.7rem; top: .5rem;
-  width: 9px; height: 9px;
+  /* O item começa depois do padding da lista; volta-se ao eixo por ele. */
+  left: calc(var(--tl-x) - 2rem);
+  /* Centra a bolinha na primeira linha de texto (o período, em mono). */
+  top: .19rem;
+  width: var(--tl-dot); height: var(--tl-dot);
+  box-sizing: border-box;
   border-radius: 50%;
+  transform: translateX(-50%);
   background: var(--ivory);
   border: 2px solid var(--accent-soft);
 }
@@ -882,6 +899,12 @@ ul { margin: 0; padding: 0; list-style: none; }
 }
 .tl-item__where { font-size: .9rem; color: var(--ink-soft); margin-bottom: .3rem; }
 .tl-item__note { font-size: .86rem; color: var(--ink-muted); font-style: italic; margin: 0; }
+.tl-item__note a {
+  color: inherit;
+  border-bottom: 1px solid var(--rule-strong);
+  transition: color var(--t), border-color var(--t);
+}
+.tl-item__note a:hover { color: var(--accent); border-bottom-color: var(--accent); }
 
 /* ==========================================================================
    Contact

@@ -79,6 +79,7 @@ const str = (v) => JSON.stringify(v ?? '');
     pt[k + '.t'] = e.degree_pt;      en[k + '.t'] = e.degree_en;
     pt[k + '.i'] = e.institution_pt; en[k + '.i'] = e.institution_en;
     pt[k + '.n'] = e.note_pt;        en[k + '.n'] = e.note_en;
+    pt[k + '.l'] = e.url || '';      en[k + '.l'] = e.url || '';
     return k;
   });
 
