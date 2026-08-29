@@ -161,8 +161,11 @@ function renderPublications(filter = 'all') {
       .map((a) => (a === ME ? `<span class="me">${esc(a)}</span>` : esc(a)))
       .join('; ');
 
-    const title = p.doi
-      ? `<a href="https://doi.org/${esc(p.doi)}" target="_blank" rel="noopener">${esc(p.title)}</a>`
+    // Um link próprio (repositório institucional, PDF) tem precedência sobre o
+    // DOI, que segue aparecendo na linha de metadados quando existe.
+    const href = p.url || (p.doi ? `https://doi.org/${p.doi}` : null);
+    const title = href
+      ? `<a href="${esc(href)}" target="_blank" rel="noopener">${esc(p.title)}</a>`
       : esc(p.title);
 
     const doi = p.doi

@@ -64,7 +64,7 @@ function applyRemote(data) {
     return {
       year: p.year, type: p.type, title: p.title,
       authors: p.authors || [], venue: p.venue_pt || '', venueKey: key,
-      doi: p.doi, cites: p.cites || 0
+      doi: p.doi, url: p.url || null, cites: p.cites || 0
     };
   }));
 

@@ -120,7 +120,8 @@ const COLLECTIONS = {
       ] },
       { k: 'venue_pt', t: 'text', label: 'Veículo (PT)', lang: 'PT', help: 'Revista, evento ou repositório. Ex.: Remote Sensing, 14(21), 5408' },
       { k: 'venue_en', t: 'text', label: 'Veículo (EN)', lang: 'EN' },
-      { k: 'doi', t: 'url', label: 'DOI', help: 'Só o identificador, sem o https://doi.org/. Deixe vazio se não houver.' }
+      { k: 'doi', t: 'url', label: 'DOI', help: 'Só o identificador, sem o https://doi.org/. Deixe vazio se não houver.' },
+      { k: 'url', t: 'url', label: 'Link do título', help: 'Opcional. Endereço completo para onde o título aponta — repositório, PDF. Preenchido, tem precedência sobre o DOI.' }
     ]
   },
 
