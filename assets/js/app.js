@@ -304,36 +304,70 @@ function renderEducation() {
    do calendário. Links de outro formato (como o embed da agenda completa) são
    ignorados de propósito, para não expor o calendário inteiro por engano.
    -------------------------------------------------------------------------- */
+let schedEmbedSrc = '';
+
 function renderScheduling() {
-  const box = $('#schedule');
-  if (!box) return;
+  const item = $('#schedule');
+  if (!item) return;
 
   const url = String(I18N.pt['sched.url'] || I18N.en['sched.url'] || '').trim();
   // O link completo pode vir com ou sem o segmento /calendar/; o curto
   // (calendar.app.google) é o que o botão "Compartilhar" do Google copia.
   const full = /^https:\/\/calendar\.google\.com\/(calendar\/)?(u\/\d+\/)?appointments\//.test(url);
   const short = /^https:\/\/calendar\.app\.google\/[A-Za-z0-9_-]+$/.test(url);
-  box.hidden = !(full || short);
-  if (!full && !short) return;
+  item.hidden = !(full || short);
+  if (!full && !short) { schedEmbedSrc = ''; return; }
 
-  const wrap = $('.schedule__frame');
   if (full) {
     // Só a forma com /calendar/ aceita ser incorporada (a outra envia
     // X-Frame-Options); ?gv=true liga o modo de incorporação.
     const embed = url.replace('calendar.google.com/appointments/',
                               'calendar.google.com/calendar/appointments/');
-    const src = embed + (embed.includes('?') ? '&' : '?') + 'gv=true';
-    const frame = $('#schedule-iframe');
-    if (frame && frame.getAttribute('src') !== src) frame.setAttribute('src', src);
-    if (wrap) wrap.hidden = false;
-  } else if (wrap) {
+    schedEmbedSrc = embed + (embed.includes('?') ? '&' : '?') + 'gv=true';
+  } else {
     // O link curto redireciona perdendo o ?gv=true e cai na forma que recusa
-    // iframe; sem como resolvê-lo no navegador, fica só o botão.
-    wrap.hidden = true;
+    // iframe; sem como resolvê-lo no navegador, o botão abre em nova aba.
+    schedEmbedSrc = '';
   }
 
   const link = $('#schedule-link');
   if (link) link.href = url;
+}
+
+function initScheduling() {
+  const modal = $('#schedule-modal');
+  const cta = $('#schedule-cta');
+  if (!modal || !cta) return;
+
+  const open = () => {
+    if (!schedEmbedSrc) {
+      const href = $('#schedule-link')?.href;
+      if (href) window.open(href, '_blank', 'noopener');
+      return;
+    }
+    // A página do Google só é carregada no primeiro clique.
+    const frame = $('#schedule-iframe');
+    if (frame && frame.getAttribute('src') !== schedEmbedSrc) {
+      frame.setAttribute('src', schedEmbedSrc);
+    }
+    modal.hidden = false;
+    document.body.style.overflow = 'hidden';
+    $('.sched-modal__close', modal)?.focus();
+  };
+
+  const close = () => {
+    modal.hidden = true;
+    document.body.style.overflow = '';
+    cta.focus();
+  };
+
+  cta.addEventListener('click', open);
+  modal.addEventListener('click', (ev) => {
+    if (ev.target.closest('[data-sched-close]')) close();
+  });
+  document.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Escape' && !modal.hidden) close();
+  });
 }
 
 function renderAll() {
@@ -599,6 +633,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initFilters();
   initNav();
   initForm();
+  initScheduling();
 
   const year = $('#year');
   if (year) year.textContent = new Date().getFullYear();
