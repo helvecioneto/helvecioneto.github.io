@@ -1,0 +1,48 @@
+name: Sincronizar cópia de reserva
+
+# O banco é a fonte de verdade: o site lê dele a cada visita. content.js é só a
+# reserva mostrada enquanto o banco responde (e se ele estiver fora do ar), e
+# por isso precisa acompanhar o que você edita no painel — de outro modo cada
+# visita começa piscando o conteúdo do último deploy.
+on:
+  schedule:
+    - cron: '17 * * * *'     # de hora em hora
+  workflow_dispatch:          # ou à mão, logo depois de editar no painel
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-content
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Só leitura: o script usa a chave publicável, sem segredo nenhum.
+      - name: Regenerar a partir do Supabase
+        run: node scripts/sync-fallback.js
+
+      - name: Publicar se algo mudou
+        run: |
+          if git diff --quiet -- assets/js/content.js; then
+            echo "Cópia de reserva já em dia."
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add assets/js/content.js
+          git commit -m "Atualiza a cópia de reserva do conteúdo
+
+          Gerado por scripts/sync-fallback.js a partir do que está no banco."
+          # Outro job (a sincronização semanal de publicações) pode ter commitado
+          # nesse meio-tempo.
+          git pull --rebase --autostash
+          git push

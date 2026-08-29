@@ -99,6 +99,41 @@ function applyRemote(data) {
     .map((l) => ({ icon: l.icon, label: l.label, url: l.url })));
 }
 
+/* -----------------------------------------------------------------------------
+   Cópia local da última versão vinda do banco
+
+   content.js é gerado no momento do deploy e envelhece a cada edição feita no
+   painel: até a próxima sincronização, a página pisca o conteúdo antigo antes
+   de o banco responder. Guardar aqui o último conteúdo que o banco entregou faz
+   a visita seguinte já abrir com ele, e não com o arquivo do deploy — e serve
+   de reserva melhor que o arquivo se o Supabase estiver fora do ar.
+   -------------------------------------------------------------------------- */
+const CACHE_KEY = 'hbln-content';
+const CACHE_MAX = 1.5 * 1024 * 1024;
+
+function saveCache(data) {
+  try {
+    const raw = JSON.stringify({ at: Date.now(), data });
+    if (raw.length <= CACHE_MAX) localStorage.setItem(CACHE_KEY, raw);
+  } catch (e) { /* modo privado ou cota estourada */ }
+}
+
+/* Aplicada antes do primeiro desenho, então precisa ser síncrona e nunca
+   derrubar a página: qualquer defeito na cópia guardada cai no content.js. */
+function applyCachedContent() {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return false;
+    const { data } = JSON.parse(raw);
+    if (!data || !Array.isArray(data.text) || !data.text.length) return false;
+    applyRemote(data);
+    return true;
+  } catch (e) {
+    try { localStorage.removeItem(CACHE_KEY); } catch (e2) { /* ignora */ }
+    return false;
+  }
+}
+
 async function loadRemoteContent() {
   const [text, areas, groups, pubs, courses, software, education, links] =
     await Promise.all([
@@ -115,5 +150,7 @@ async function loadRemoteContent() {
   // Um banco recém-criado e vazio não deve apagar a página.
   if (!text.length && !pubs.length) throw new Error('conteúdo remoto vazio');
 
-  applyRemote({ text, areas, groups, pubs, courses, software, education, links });
+  const data = { text, areas, groups, pubs, courses, software, education, links };
+  applyRemote(data);
+  saveCache(data);
 }

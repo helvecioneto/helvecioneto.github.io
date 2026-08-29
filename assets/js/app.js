@@ -607,6 +607,11 @@ function initForm() {
    ========================================================================== */
 document.addEventListener('DOMContentLoaded', () => {
   lang = detectLang();
+
+  // Antes de desenhar: se o navegador já viu o conteúdo do banco, é ele que
+  // abre a página, não a cópia embutida no deploy.
+  if (typeof applyCachedContent === 'function') applyCachedContent();
+
   applyI18n();
   renderAll();
   initLangSwitch();
