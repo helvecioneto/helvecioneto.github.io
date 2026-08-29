@@ -350,7 +350,27 @@ function renderScheduling() {
   if (link) link.href = url;
 }
 
+/* A foto enviada pelo painel substitui a que veio no deploy. Uma só serve aos
+   dois idiomas, então basta que um dos campos traga um endereço válido; o
+   srcset precisa sair junto, ou o navegador seguiria escolhendo o arquivo
+   antigo nas telas pequenas. */
+function renderPhoto() {
+  const img = $('#portrait');
+  if (!img) return;
+
+  const url = [I18N.pt['hero.photo'], I18N.en['hero.photo']]
+    .find((v) => /^https?:\/\//.test(String(v || '').trim()));
+  if (!url) return;
+
+  if (img.getAttribute('src') !== url) {
+    img.removeAttribute('srcset');
+    img.removeAttribute('sizes');
+    img.setAttribute('src', url);
+  }
+}
+
 function renderAll() {
+  renderPhoto();
   renderLinks();
   renderScheduling();
   renderResearch();

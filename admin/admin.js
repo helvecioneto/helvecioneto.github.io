@@ -77,6 +77,9 @@ async function uploadImage(file) {
   return PUBLIC_MEDIA + path;
 }
 
+/* Chaves de texto que, na verdade, guardam o endereço de uma imagem. */
+const IMAGE_KEY = /\.photo$/;
+
 const PUB_TYPES = [
   ['journal',    'Artigo em periódico'],
   ['conference', 'Trabalho em conferência'],
@@ -91,10 +94,15 @@ const COLLECTIONS = {
     noAdd: true, noDelete: true, noReorder: true,
     titleOf: (r) => r.label || trunc(r.pt) || r.key,
     metaOf:  (r) => r.key,
-    fields: [
-      { k: 'pt', t: 'area', label: 'Português', lang: 'PT' },
-      { k: 'en', t: 'area', label: 'English',   lang: 'EN' }
-    ]
+    // Uma imagem não tem versão em cada idioma: a chave guarda um endereço só,
+    // em `pt`, e ganha o seletor de arquivo no lugar dos dois campos de texto.
+    fields: (r) => (IMAGE_KEY.test(r.key)
+      ? [{ k: 'pt', t: 'image', label: 'Imagem',
+           help: 'PNG, JPG ou WebP, até 2 MB. Sem imagem, vale a que veio com o site.' }]
+      : [
+          { k: 'pt', t: 'area', label: 'Português', lang: 'PT' },
+          { k: 'en', t: 'area', label: 'English',   lang: 'EN' }
+        ])
   },
 
   publications: {
@@ -281,6 +289,14 @@ const SECTIONS = [
     ]
   },
   {
+    id: 'formacao', nav: 'Formação',
+    intro: 'A linha do tempo da sua formação acadêmica. O item mais acima recebe o marcador preenchido.',
+    blocks: [
+      { kind: 'rec',  label: 'Formação', col: 'education' },
+      { kind: 'text', label: 'Cabeçalho da seção', from: ['Formação'] }
+    ]
+  },
+  {
     id: 'pesquisa', nav: 'Pesquisa',
     intro: 'Os cartões de linhas de pesquisa e os grupos aos quais você é vinculado.',
     blocks: [
@@ -311,14 +327,6 @@ const SECTIONS = [
     blocks: [
       { kind: 'rec',  label: 'Produtos', col: 'software' },
       { kind: 'text', label: 'Cabeçalho da seção', from: ['Produtos'] }
-    ]
-  },
-  {
-    id: 'formacao', nav: 'Formação',
-    intro: 'A linha do tempo da sua formação acadêmica. O item mais acima recebe o marcador preenchido.',
-    blocks: [
-      { kind: 'rec',  label: 'Formação', col: 'education' },
-      { kind: 'text', label: 'Cabeçalho da seção', from: ['Formação'] }
     ]
   },
   {
@@ -491,8 +499,12 @@ function fieldHTML(f, rec) {
   </div>`;
 }
 
+/* Uma coleção pode decidir os campos por registro — é como um texto que guarda
+   uma imagem ganha o seletor de arquivo em vez dos campos de idioma. */
+const fieldsOf = (c, rec) => (typeof c.fields === 'function' ? c.fields(rec) : c.fields);
+
 function fieldsHTML(c, rec) {
-  return c.fields.map((f) => {
+  return fieldsOf(c, rec).map((f) => {
     if (f.pair) return `<div class="pair">${f.pair.map((x) => fieldHTML(x, rec)).join('')}</div>`;
     if (f.row)  return `<div class="row3">${f.row.map((x) => fieldHTML(x, rec)).join('')}</div>`;
     return fieldHTML(f, rec);
@@ -593,7 +605,7 @@ function payloadOf(c, rec) {
     if (f.row)  return f.row.forEach(walk);
     out[f.k] = rec[f.k];
   };
-  c.fields.forEach(walk);
+  fieldsOf(c, rec).forEach(walk);
   return out;
 }
 

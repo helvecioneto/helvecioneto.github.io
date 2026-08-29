@@ -78,11 +78,11 @@
 
     <nav class="nav" aria-label="Principal">
       <a href="#about"        data-i18n="nav.about">Perfil</a>
+      <a href="#education"    data-i18n="nav.education">Formação</a>
       <a href="#research"     data-i18n="nav.research">Pesquisa</a>
       <a href="#publications" data-i18n="nav.publications">Publicações</a>
       <a href="#teaching"     data-i18n="nav.teaching">Ensino</a>
       <a href="#software"     data-i18n="nav.software">Software</a>
-      <a href="#education"    data-i18n="nav.education">Formação</a>
       <a href="#contact"      data-i18n="nav.contact">Contato</a>
       <a href="#agendamento"  data-i18n="nav.schedule" data-sched-nav hidden>Agendamento</a>
     </nav>
@@ -101,11 +101,11 @@
   <nav class="drawer" id="drawer" aria-label="Navegação móvel">
     <ul>
       <li><a href="#about"        data-i18n="nav.about">Perfil</a></li>
+      <li><a href="#education"    data-i18n="nav.education">Formação</a></li>
       <li><a href="#research"     data-i18n="nav.research">Pesquisa</a></li>
       <li><a href="#publications" data-i18n="nav.publications">Publicações</a></li>
       <li><a href="#teaching"     data-i18n="nav.teaching">Ensino</a></li>
       <li><a href="#software"     data-i18n="nav.software">Software</a></li>
-      <li><a href="#education"    data-i18n="nav.education">Formação</a></li>
       <li><a href="#contact"      data-i18n="nav.contact">Contato</a></li>
       <li data-sched-nav hidden><a href="#agendamento" data-i18n="nav.schedule">Agendamento</a></li>
     </ul>
@@ -123,7 +123,7 @@
 
     <div class="portrait">
       <div class="portrait__frame">
-        <img src="assets/img/helvecio-leal-neto.jpg"
+        <img id="portrait" src="assets/img/helvecio-leal-neto.jpg"
              srcset="assets/img/helvecio-leal-neto-sm.jpg 400w, assets/img/helvecio-leal-neto.jpg 1000w"
              sizes="(max-width: 760px) 11rem, 15rem"
              width="1000" height="1250"
@@ -209,12 +209,26 @@
 </section>
 
 <!-- ====================================================================== -->
-<!-- 02 — Research                                                           -->
+<!-- 02 — Education                                                          -->
 <!-- ====================================================================== -->
-<section class="section section--alt" id="research">
+<section class="section section--alt" id="education">
   <div class="wrap">
     <header class="section__head reveal">
-      <span class="section__index" data-i18n="research.index">02 — Pesquisa</span>
+      <span class="section__index" data-i18n="edu.index">02 — Formação</span>
+      <h2 data-i18n="edu.title">Formação acadêmica</h2>
+      <p class="section__lede" data-i18n="edu.lede"></p>
+    </header>
+    <ol class="timeline reveal" id="education-list"></ol>
+  </div>
+</section>
+
+<!-- ====================================================================== -->
+<!-- 03 — Research                                                           -->
+<!-- ====================================================================== -->
+<section class="section" id="research">
+  <div class="wrap">
+    <header class="section__head reveal">
+      <span class="section__index" data-i18n="research.index">03 — Pesquisa</span>
       <h2 data-i18n="research.title">Linhas de pesquisa</h2>
       <p class="section__lede" data-i18n="research.lede"></p>
     </header>
@@ -227,12 +241,12 @@
 </section>
 
 <!-- ====================================================================== -->
-<!-- 03 — Publications                                                       -->
+<!-- 04 — Publications                                                       -->
 <!-- ====================================================================== -->
-<section class="section" id="publications">
+<section class="section section--alt" id="publications">
   <div class="wrap">
     <header class="section__head reveal">
-      <span class="section__index" data-i18n="pubs.index">03 — Produção</span>
+      <span class="section__index" data-i18n="pubs.index">04 — Produção</span>
       <h2 data-i18n="pubs.title">Publicações selecionadas</h2>
       <p class="section__lede" data-i18n="pubs.lede"></p>
     </header>
@@ -244,12 +258,12 @@
 </section>
 
 <!-- ====================================================================== -->
-<!-- 04 — Teaching                                                           -->
+<!-- 05 — Teaching                                                           -->
 <!-- ====================================================================== -->
-<section class="section section--alt" id="teaching">
+<section class="section section--paper" id="teaching">
   <div class="wrap">
     <header class="section__head reveal">
-      <span class="section__index" data-i18n="teaching.index">04 — Ensino</span>
+      <span class="section__index" data-i18n="teaching.index">05 — Ensino</span>
       <h2 data-i18n="teaching.title">Disciplinas ministradas</h2>
       <p class="section__lede" data-i18n="teaching.lede"></p>
     </header>
@@ -258,12 +272,12 @@
 </section>
 
 <!-- ====================================================================== -->
-<!-- 05 — Software                                                           -->
+<!-- 06 — Software                                                           -->
 <!-- ====================================================================== -->
-<section class="section section--paper" id="software">
+<section class="section section--alt" id="software">
   <div class="wrap">
     <header class="section__head reveal">
-      <span class="section__index" data-i18n="soft.index">05 — Software</span>
+      <span class="section__index" data-i18n="soft.index">06 — Software</span>
       <h2 data-i18n="soft.title">Software científico</h2>
       <p class="section__lede" data-i18n="soft.lede"></p>
     </header>
@@ -271,20 +285,6 @@
     <p class="section__more">
       <a href="https://github.com/helvecioneto?tab=repositories" target="_blank" rel="noopener" data-i18n="soft.viewall"></a>
     </p>
-  </div>
-</section>
-
-<!-- ====================================================================== -->
-<!-- 06 — Education                                                          -->
-<!-- ====================================================================== -->
-<section class="section section--alt" id="education">
-  <div class="wrap">
-    <header class="section__head reveal">
-      <span class="section__index" data-i18n="edu.index">06 — Formação</span>
-      <h2 data-i18n="edu.title">Formação acadêmica</h2>
-      <p class="section__lede" data-i18n="edu.lede"></p>
-    </header>
-    <ol class="timeline reveal" id="education-list"></ol>
   </div>
 </section>
 
@@ -429,6 +429,7 @@
         <h4 data-i18n="footer.nav">Navegação</h4>
         <ul>
           <li><a href="#about"        data-i18n="nav.about">Perfil</a></li>
+          <li><a href="#education"    data-i18n="nav.education">Formação</a></li>
           <li><a href="#research"     data-i18n="nav.research">Pesquisa</a></li>
           <li><a href="#publications" data-i18n="nav.publications">Publicações</a></li>
           <li><a href="#teaching"     data-i18n="nav.teaching">Ensino</a></li>
