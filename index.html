@@ -380,6 +380,24 @@
         <div class="form__status" id="form-status"></div>
       </form>
     </div>
+
+    <!-- Agendamento de reuniões: só aparece quando a URL da agenda de
+         compromissos do Google Calendar está configurada no painel /admin.
+         A página incorporada exibe apenas os horários vagos dos dias que o
+         próprio Google Calendar mantém liberados — nunca a agenda completa. -->
+    <div class="schedule reveal" id="schedule" hidden>
+      <div class="schedule__head">
+        <h3 data-i18n="sched.title">Agende uma reunião</h3>
+        <p class="schedule__lede" data-i18n="sched.lede"></p>
+      </div>
+      <div class="schedule__frame">
+        <iframe id="schedule-iframe" title="Google Calendar" loading="lazy"></iframe>
+      </div>
+      <p class="schedule__alt">
+        <a id="schedule-link" class="btn btn--ghost" target="_blank" rel="noopener"
+           data-i18n="sched.open">Abrir a agenda em uma nova aba</a>
+      </p>
+    </div>
   </div>
 </section>
 

@@ -324,6 +324,7 @@ const SECTIONS = [
     intro: 'Seus dados de contato e todos os rótulos do formulário, incluindo os motivos e as mensagens de erro.',
     blocks: [
       { kind: 'text', label: 'Dados de contato', from: ['Contato'] },
+      { kind: 'text', label: 'Agendamento de reuniões (Google Calendar)', from: ['Agendamento'] },
       { kind: 'text', label: 'Formulário', from: ['Formulário'] }
     ]
   },
