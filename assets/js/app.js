@@ -294,8 +294,37 @@ function renderEducation() {
   }).join('');
 }
 
+/* -----------------------------------------------------------------------------
+   Agendamento de reuniões (Google Calendar — agenda de compromissos)
+
+   O bloco só aparece quando a chave de texto `sched.url` traz um link de
+   "agenda de compromissos" do Google Calendar (calendar.google.com/calendar/
+   appointments/...). Esse tipo de página mostra apenas os horários vagos dos
+   dias liberados na configuração da agenda — nunca os eventos nem o restante
+   do calendário. Links de outro formato (como o embed da agenda completa) são
+   ignorados de propósito, para não expor o calendário inteiro por engano.
+   -------------------------------------------------------------------------- */
+function renderScheduling() {
+  const box = $('#schedule');
+  if (!box) return;
+
+  const url = String(I18N.pt['sched.url'] || I18N.en['sched.url'] || '').trim();
+  const valid = /^https:\/\/calendar\.google\.com\/calendar\/(u\/\d+\/)?appointments\//.test(url);
+  box.hidden = !valid;
+  if (!valid) return;
+
+  // ?gv=true é o modo de incorporação da página de agendamento.
+  const src = url + (url.includes('?') ? '&' : '?') + 'gv=true';
+  const frame = $('#schedule-iframe');
+  if (frame && frame.getAttribute('src') !== src) frame.setAttribute('src', src);
+
+  const link = $('#schedule-link');
+  if (link) link.href = url;
+}
+
 function renderAll() {
   renderLinks();
+  renderScheduling();
   renderResearch();
   renderGroups();
   renderFilters();

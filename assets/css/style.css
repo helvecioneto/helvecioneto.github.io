@@ -1029,6 +1029,43 @@ ul { margin: 0; padding: 0; list-style: none; }
 .form__status--ok  { background: var(--accent-wash); color: var(--accent); border-left: 3px solid var(--accent); }
 .form__status--err { background: #FBEDEB; color: #8E2F26; border-left: 3px solid #B3392F; }
 
+/* Scheduling — Google Calendar appointment page embed */
+.schedule {
+  margin-top: clamp(2.5rem, 5vw, 4rem);
+  padding-top: clamp(2rem, 4vw, 3rem);
+  border-top: 1px solid var(--rule);
+}
+
+.schedule__head h3 {
+  font-family: var(--serif);
+  font-size: clamp(1.35rem, 2.4vw, 1.7rem);
+  margin-bottom: .5rem;
+}
+
+.schedule__lede {
+  max-width: var(--measure-text);
+  color: var(--ink-muted);
+  font-size: .95rem;
+  margin-bottom: 1.6rem;
+}
+
+.schedule__frame {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.schedule__frame iframe {
+  display: block;
+  width: 100%;
+  height: min(72vh, 640px);
+  border: 0;
+}
+
+.schedule__alt { margin: 1.2rem 0 0; }
+
 /* ==========================================================================
    Footer
    ========================================================================== */
