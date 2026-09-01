@@ -1,7 +1,7 @@
 /* =============================================================================
    content.js — cópia de reserva do conteúdo (pt-BR / en)
 
-   GERADO AUTOMATICAMENTE por scripts/sync-fallback.js em 2026-08-31.
+   GERADO AUTOMATICAMENTE por scripts/sync-fallback.js em 2026-09-01.
    Não edite à mão: use o painel em /admin e rode o script de novo.
 
    O site lê o conteúdo vivo do Supabase; este arquivo é o que ele exibe se o
