@@ -25,6 +25,9 @@
      autores nunca são sobrescritos: podem ter sido corrigidos à mão.
    · Publicação nova entra marcada como `openalex`, para se distinguir no painel.
    · Nada é apagado. Um trabalho que suma do OpenAlex permanece no site.
+   · O que foi apagado no painel não volta: fica em `publications_dismissed`.
+   · Citação não cai por troca de fonte. Se o Semantic Scholar falhar e o
+     OpenAlex trouxer um número menor, vale o que já estava no banco.
 
    Uso:  SUPABASE_SERVICE_KEY=... node scripts/sync-publications.js [--dry-run]
    ========================================================================== */
@@ -151,11 +154,18 @@ async function semanticScholarCites(dois) {
   for (let i = 0; i < ids.length; i += 100) {
     const batch = ids.slice(i, i + 100);
     try {
-      const res = await fetch('https://api.semanticscholar.org/graph/v1/paper/batch?fields=citationCount,externalIds', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ids: batch })
-      });
+      // Sem chave, a cota do Semantic Scholar é compartilhada e o 429 é comum;
+      // vale esperar e tentar de novo antes de cair para o OpenAlex.
+      let res;
+      for (let attempt = 0; attempt < 4; attempt++) {
+        if (attempt) await sleep(5000 * attempt);
+        res = await fetch('https://api.semanticscholar.org/graph/v1/paper/batch?fields=citationCount,externalIds', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids: batch })
+        });
+        if (res.status !== 429) break;
+      }
       if (!res.ok) { console.warn(`  Semantic Scholar respondeu ${res.status}; usando OpenAlex nesse lote.`); continue; }
       const rows = await res.json();
       rows.forEach((r, j) => {
@@ -198,10 +208,18 @@ async function serpapiCites() {
 (async () => {
   console.log(DRY ? '— simulação, nada será gravado —\n' : '');
 
-  const existing = await db('/publications?select=id,title,doi,cites,source,external_id,sort_order');
+  const existing = await db('/publications?select=id,title,doi,cites,cites_source,source,external_id,sort_order');
   const byDoi = new Map(existing.filter((p) => p.doi).map((p) => [normDoi(p.doi), p]));
   const byTitle = new Map(existing.map((p) => [normTitle(p.title), p]));
   console.log(`no banco: ${existing.length} publicações`);
+
+  // Apagadas no painel (migração 018): não voltam como "novas".
+  const dismissed = await db('/publications_dismissed?select=title,doi,external_id');
+  const dismissedKeys = new Set(dismissed.flatMap((d) =>
+    [d.external_id, normDoi(d.doi), 'title:' + normTitle(d.title)].filter(Boolean)));
+  const isDismissed = (r) => dismissedKeys.has(r.external_id)
+    || (r.doi && dismissedKeys.has(r.doi))
+    || dismissedKeys.has('title:' + normTitle(r.title));
 
   const works = await openalexWorks();
   console.log(`OpenAlex: ${works.length} trabalhos encontrados`);
@@ -222,7 +240,14 @@ async function serpapiCites() {
     return [r.cites, 'openalex'];
   };
 
-  let inserted = 0, updated = 0, unchanged = 0;
+  // Uma fonte de menor prioridade nunca derruba uma contagem que veio de outra
+  // melhor — foi o que aconteceu quando o Semantic Scholar respondeu 429 e
+  // valeram os números, sempre menores, do OpenAlex.
+  const RANK = { 'google-scholar': 3, 'semantic-scholar': 2, openalex: 1 };
+  const weakerDrop = (match, cites, src) =>
+    cites < match.cites && (RANK[src] || 0) < (RANK[match.cites_source] || 0);
+
+  let inserted = 0, updated = 0, unchanged = 0, skipped = 0;
   const now = new Date().toISOString();
   const maxOrder = existing.reduce((m, p) => Math.max(m, p.sort_order ?? 0), 0);
 
@@ -233,6 +258,11 @@ async function serpapiCites() {
     if (match) {
       // Só as citações. O resto pode ter sido corrigido à mão no painel.
       if (match.cites === cites) { unchanged++; continue; }
+      if (weakerDrop(match, cites, citesSource)) {
+        console.log(`  = mantém ${match.cites} (${match.cites_source}); ${citesSource} diz ${cites}  ${r.title.slice(0, 40)}`);
+        unchanged++;
+        continue;
+      }
       console.log(`  ↑ ${match.cites} → ${cites} (${citesSource})  ${r.title.slice(0, 58)}`);
       if (!DRY) {
         await db(`/publications?id=eq.${match.id}`, {
@@ -241,6 +271,8 @@ async function serpapiCites() {
         });
       }
       updated++;
+    } else if (isDismissed(r)) {
+      skipped++;
     } else {
       console.log(`  + NOVA (${r.year})  ${r.title.slice(0, 62)}`);
       if (!DRY) {
@@ -257,6 +289,7 @@ async function serpapiCites() {
     }
   }
 
-  console.log(`\n${inserted} nova(s), ${updated} atualizada(s), ${unchanged} sem mudança.`);
+  console.log(`\n${inserted} nova(s), ${updated} atualizada(s), ${unchanged} sem mudança` +
+              (skipped ? `, ${skipped} ignorada(s) por terem sido apagadas no painel.` : '.'));
   if (inserted && !DRY) console.log('As novas entram no site marcadas como "openalex" — confira no painel.');
 })().catch((err) => { console.error('falhou:', err.message); process.exit(1); });

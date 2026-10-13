@@ -26,12 +26,17 @@ Em <https://helvecioneto.github.io/admin/>. Entre com `helvecio.leal@ufopa.edu.b
 e a senha definida no Supabase. O que sai de lá entra no ar **na hora**: o site lê
 o conteúdo direto do banco, sem precisar de commit nem de novo deploy.
 
-O menu do painel segue a mesma ordem das seções da página — Perfil, Pesquisa,
-Publicações, Ensino, Produtos, Formação, Contato — para que editar seja procurar
+O menu do painel segue a mesma ordem das seções da página — Perfil, Formação,
+Pesquisa, Publicações, Ensino, Produtos, Contato — para que editar seja procurar
 pelo mesmo nome que se vê no site. Dentro de cada seção, os textos e as fichas
 daquela parte aparecem juntos, em blocos. Um oitavo item, **Geral**, reúne o que
 não pertence a nenhuma seção: título da aba do navegador, descrição para
 buscadores, nomes do menu e rodapé.
+
+A foto do topo é trocada em **Perfil** (seletor de arquivo; vazia, vale a do
+deploy). A seção **08 — Agendamento**, com a agenda de compromissos do Google
+Calendar incorporada, é editada em **Contato**: ela e seu item de menu só
+aparecem enquanto o link da agenda estiver preenchido.
 
 As contagens dos filtros de publicação são somadas a partir dos registros — não
 existem como campo, então nunca ficam dessincronizadas.
@@ -85,6 +90,11 @@ Regras que a rotina respeita:
 - **Publicação já cadastrada só tem as citações atualizadas.** Título, veículo e
   autores nunca são sobrescritos — podem ter sido corrigidos por você no painel.
 - **Nada é apagado.** Um trabalho que suma do OpenAlex continua no site.
+- **O que você apaga no painel não volta.** Toda exclusão fica registrada em
+  `publications_dismissed`, e a rotina não importa de novo o que estiver lá.
+- **Citação não cai por troca de fonte.** Se o Semantic Scholar recusar a
+  consulta (ele responde 429 com frequência) e o OpenAlex trouxer um número
+  menor, fica o que já estava no banco.
 - **O que entra sozinho vem marcado como "importada"** na lista do painel, para
   se distinguir do que você cadastrou.
 
@@ -153,6 +163,7 @@ Pelo painel em `/admin`. As tabelas no Supabase são:
 | `software` | produtos, estrelas e links |
 | `education` | linha do tempo da formação |
 | `links` | botões de perfil do topo |
+| `publications_dismissed` | publicações apagadas, que a sincronização não reimporta (invisível para o cliente) |
 | `admins` | quem pode escrever (invisível para o cliente) |
 
 Imagens enviadas pelo painel vão para o bucket `media` do Supabase Storage:
@@ -162,6 +173,14 @@ por arquivo, em PNG, JPG, WebP, SVG ou GIF.
 Ao cadastrar uma publicação, escreva seu nome exatamente como `Leal Neto, H. B.`
 para que apareça em negrito na lista de autores. O campo `type` aceita `journal`,
 `conference`, `preprint`, `thesis` e `dataset` — é ele que alimenta os filtros.
+
+### Mudanças no banco
+
+Toda mudança de schema ou de dados em lote é uma migração numerada em
+`supabase/migrations/`, aplicada com `supabase db push`. **Antes de qualquer
+push, confira `supabase migration list`** e rode `supabase db push --dry-run`:
+`002_seed.sql` começa com `truncate`, e reaplicá-lo apaga tudo o que foi editado
+pelo painel (foi o que motivou `009_restore.sql`).
 
 ## Desenvolvimento local
 
