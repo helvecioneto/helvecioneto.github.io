@@ -1,0 +1,16 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="strict-origin-when-cross-origin"><title>Vídeo explicativo</title>
+<style>html,body{margin:0;height:100%;background:#000}iframe{position:fixed;inset:0;width:100%;height:100%;border:0}
+p{color:#fff;font:16px system-ui;display:flex;height:100%;align-items:center;justify-content:center;margin:0}</style></head>
+<body><script>
+(function(){
+  var v = new URLSearchParams(location.search).get('v') || '';
+  if (!/^[\w-]{11}$/.test(v)){ document.body.innerHTML = '<p>vídeo inválido</p>'; return; }
+  var f = document.createElement('iframe');
+  f.src = 'https://www.youtube-nocookie.com/embed/' + v + '?autoplay=1&rel=0';
+  f.allow = 'autoplay; fullscreen; picture-in-picture; encrypted-media';
+  f.referrerPolicy = 'strict-origin-when-cross-origin';
+  f.allowFullscreen = true;
+  document.body.appendChild(f);
+})();
+</script></body></html>
